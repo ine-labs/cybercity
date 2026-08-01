@@ -94,20 +94,20 @@ IEC 61850 is the international standard for substation automation and protection
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 📋 Prerequisites
 
 - **Node.js** 20+ (`brew install node`)
 - **Python** 3.11+ (`brew install python@3.11`)
 - **SNMP tools** for Scenario 2 (`brew install net-snmp`)
 
-### Setup
+### 🔧 Setup
 
 ```bash
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-### Run (two terminals)
+### ▶️ Run (two terminals)
 
 **Terminal 1 (Backend):**
 ```bash
@@ -159,6 +159,6 @@ Open **http://localhost:3000**.
 
 *This project is under active development. New scenarios and features are being added regularly.*
 
-## License
+## 📄 License
 
 This program is free software: you can redistribute it and/or modify it under the terms of the MIT License.
