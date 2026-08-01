@@ -111,16 +111,19 @@ IEC 61850 is the international standard for substation automation and protection
 - **Python** 3.11+ (`brew install python@3.11`)
 - **SNMP tools** for Scenario 2 (`brew install net-snmp`)
 
-### 🔧 Setup
+### ⚙️ Setup & Run
+
+**Step 1: Setup**
 
 ```bash
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-### Run (two terminals)
+**Step 2: Run (two terminals)**
 
 **Terminal 1 (Backend):**
+
 ```bash
 cd backend
 source venv/bin/activate
@@ -128,20 +131,23 @@ python main.py
 ```
 
 **Terminal 2 (Frontend):**
+
 ```bash
 cd frontend
 npm run dev
 ```
 
-Open **http://localhost:3000** in your browser.
+**Step 3: Open the app**
 
-### 🐳 Run with Docker (alternative)
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🐳 Run with Docker (alternative)
 
 ```bash
 docker-compose up --build
 ```
 
-Open **http://localhost:3000**.
+Open [http://localhost:3000](http://localhost:3000).
 
 ## 🏛️ Architecture
 
