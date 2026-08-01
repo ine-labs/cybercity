@@ -24,7 +24,7 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 
 - Ashish Bhangale, Lead Security Researcher (R&D), [LinkedIn](https://www.linkedin.com/in/hax0rguy/)
 - G Khartheesvar, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/g-khartheesvar/)
-- Litesh Ghute, Sr. Enigneer (R&D), [LinkedIn](https://www.linkedin.com/in/liteshghute/)
+- Litesh Ghute, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/liteshghute/)
 
 ## 🎯 Scenarios
 
