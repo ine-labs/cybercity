@@ -14,17 +14,17 @@
 ![License](https://img.shields.io/badge/License-Educational%20Use-F59E0B)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-blue)
 
-## Contributors
-
-- Ashish Bhangale, Lead Security Researcher (R&D), [LinkedIn](https://www.linkedin.com/in/hax0rguy/)
-- G Khartheesvar, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/g-khartheesvar/)
-- Litesh Ghute, Sr. Enigneer (R&D), [LinkedIn](https://www.linkedin.com/in/liteshghute/)
-
 Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.
 
 A scenario-based training lab where students learn to assess and exploit real-world industrial control systems. Each scenario simulates a different critical infrastructure facility with live physics, real ICS/OT protocols, and visual feedback.
 
 ![CyberCity ICS/OT Demo](assets/demo.gif)
+
+## Contributors
+
+- Ashish Bhangale, Lead Security Researcher (R&D), [LinkedIn](https://www.linkedin.com/in/hax0rguy/)
+- G Khartheesvar, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/g-khartheesvar/)
+- Litesh Ghute, Sr. Enigneer (R&D), [LinkedIn](https://www.linkedin.com/in/liteshghute/)
 
 ## 🎯 Scenarios
 
