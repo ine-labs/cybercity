@@ -1,18 +1,29 @@
-# 🏙️ CyberCity ICS/OT
+<p align="center">
+  <img src="assets/logo.png" alt="CyberCity ICS/OT Logo" width="260">
+</p>
 
-![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
-![React](https://img.shields.io/badge/React-Konva%20%2B%20Recharts-61DAFB?logo=react&logoColor=black)
-![FastAPI](https://img.shields.io/badge/FastAPI-WebSocket-009688?logo=fastapi&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+<h1 align="center">CyberCity ICS/OT</h1>
 
-![Modbus](https://img.shields.io/badge/Protocol-Modbus%2FTCP-FF6B35)
-![SNMP](https://img.shields.io/badge/Protocol-SNMP%20v2c%20%28NTCIP%29-8B5CF6)
-![IEC 61850](https://img.shields.io/badge/Protocol-IEC%2061850%20MMS-0EA5E9)
+<p align="center">
+  <img alt="Node.js" src="https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white" />
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white" />
+  <img alt="React" src="https://img.shields.io/badge/React-Konva%20%2B%20Recharts-61DAFB?logo=react&logoColor=black" />
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-WebSocket-009688?logo=fastapi&logoColor=white" />
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
+</p>
 
-![Scenarios](https://img.shields.io/badge/Scenarios-3%20Active-22C55E)
-![License](https://img.shields.io/badge/License-Educational%20Use-F59E0B)
-![Status](https://img.shields.io/badge/Status-Active%20Development-blue)
+<p align="center">
+  <img alt="Modbus" src="https://img.shields.io/badge/Protocol-Modbus%2FTCP-FF6B35" />
+  <img alt="SNMP" src="https://img.shields.io/badge/Protocol-SNMP%20v2c%20%28NTCIP%29-8B5CF6" />
+  <img alt="IEC 61850" src="https://img.shields.io/badge/Protocol-IEC%2061850%20MMS-0EA5E9" />
+</p>
+
+<p align="center">
+  <img alt="Scenarios" src="https://img.shields.io/badge/Scenarios-3%20Active-22C55E" />
+  <img alt="License" src="https://img.shields.io/badge/License-Educational%20Use-F59E0B" />
+  <img alt="Status" src="https://img.shields.io/badge/Status-Active%20Development-blue" />
+
+</p>
 
 Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.
 
