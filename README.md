@@ -107,7 +107,7 @@ chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-### ▶️ Run (two terminals)
+### Run (two terminals)
 
 **Terminal 1 (Backend):**
 ```bash
@@ -132,7 +132,7 @@ docker-compose up --build
 
 Open **http://localhost:3000**.
 
-## Architecture
+## 🏛️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
