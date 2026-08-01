@@ -1,10 +1,8 @@
 # CyberCity - ICS/OT Cybersecurity Training Platform
 
 <p align="center">
-  <img src="assets/logo.png" alt="CyberCity ICS/OT Logo" width="260">
+  <img src="assets/logo.png" alt="CyberCity ICS/OT Logo" width="700">
 </p>
-
-<!-- <h2 align="left">CyberCity ICS/OT</h2> -->
 
 <p align="center">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white" />
