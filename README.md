@@ -113,14 +113,21 @@ IEC 61850 is the international standard for substation automation and protection
 
 #### ⚙️ Setup & Run
 
-**Step 1: Setup**
+**Step 1: Clone the repository**
+
+```bash
+git clone https://github.com/ine-labs/cybercity.git
+cd cybercity
+```
+
+**Step 2: Setup**
 
 ```bash
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-**Step 2: Run (two terminals)**
+**Step 3: Run (two terminals)**
 
 **Terminal 1 (Backend):**
 
@@ -137,14 +144,16 @@ cd frontend
 npm run dev
 ```
 
-**Step 3: Open the app**
+**Step 4: Open the app**
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🐳 Run with Docker (alternative)
 
 ```bash
-docker-compose up --build
+git clone https://github.com/ine-labs/cybercity.git
+cd cybercity
+docker compose up --build
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
