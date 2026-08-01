@@ -136,14 +136,14 @@ Open **http://localhost:3000**.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Browser (localhost:3000)                                │
-│  React + Konva.js + Recharts                             │
+│  Browser (localhost:3000)                               │
+│  React + Konva.js + Recharts                            │
 └────────────────────────┬────────────────────────────────┘
                          │ WebSocket (Socket.IO)
                          ▼
 ┌─────────────────────────────────────────────────────────┐
-│  FastAPI + Socket.IO (localhost:8000)                     │
-│  Physics Engine · Protocol Servers · Real-time State     │
+│  FastAPI + Socket.IO (localhost:8000)                   │
+│  Physics Engine · Protocol Servers · Real-time State    │
 ├─────────────────┬─────────────────┬─────────────────────┤
 │ Modbus/TCP      │ SNMP Agent      │ IEC 61850 MMS       │
 │ Port 5020       │ Port 5021/udp   │ Port 5022           │
