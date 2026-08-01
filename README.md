@@ -22,12 +22,15 @@
   <img alt="Scenarios" src="https://img.shields.io/badge/Scenarios-3%20Active-22C55E" />
   <img alt="License" src="https://img.shields.io/badge/License-Educational%20Use-F59E0B" />
   <img alt="Status" src="https://img.shields.io/badge/Status-Active%20Development-blue" />
-
 </p>
 
-Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.
+<p align="center"><strong>Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.</strong></p>
+
+---
 
 A scenario-based training lab where students learn to assess and exploit real-world industrial control systems. Each scenario simulates a different critical infrastructure facility with live physics, real ICS/OT protocols, and visual feedback.
+
+## 🎬 Demo
 
 ![CyberCity ICS/OT Demo](assets/demo.gif)
 
