@@ -1,7 +1,7 @@
 # CyberCity - ICS/OT Cybersecurity Training Platform
 
 <p align="center">
-  <img src="assets/logo.png" alt="CyberCity ICS/OT Logo" width="700">
+  <img src="assets/logo.png" alt="CyberCity ICS/OT Logo" width="1050">
 </p>
 
 <p align="center">
