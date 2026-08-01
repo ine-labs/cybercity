@@ -20,7 +20,7 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 
 ![CyberCity ICS/OT Demo](assets/demo.gif)
 
-## Contributors
+## 👥 Contributors
 
 - Ashish Bhangale, Lead Security Researcher (R&D), [LinkedIn](https://www.linkedin.com/in/hax0rguy/)
 - G Khartheesvar, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/g-khartheesvar/)
