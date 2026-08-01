@@ -149,6 +149,12 @@ Open **http://localhost:3000**.
    (Student attacks with standard ICS/OT tooling)
 ```
 
+## Contributors
+
+- Ashish Bhangale, Lead Security Researcher (R&D), [LinkedIn](https://www.linkedin.com/in/hax0rguy/)
+- G Khartheesvar, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/g-khartheesvar/)
+- Litesh Ghute, Sr. Enigneer (R&D), [LinkedIn](https://www.linkedin.com/in/liteshghute/)
+
 ---
 
 *This project is under active development. New scenarios and features are being added regularly.*
