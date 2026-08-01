@@ -14,6 +14,12 @@
 ![License](https://img.shields.io/badge/License-Educational%20Use-F59E0B)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-blue)
 
+## Contributors
+
+- Ashish Bhangale, Lead Security Researcher (R&D), [LinkedIn](https://www.linkedin.com/in/hax0rguy/)
+- G Khartheesvar, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/g-khartheesvar/)
+- Litesh Ghute, Sr. Enigneer (R&D), [LinkedIn](https://www.linkedin.com/in/liteshghute/)
+
 Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.
 
 A scenario-based training lab where students learn to assess and exploit real-world industrial control systems. Each scenario simulates a different critical infrastructure facility with live physics, real ICS/OT protocols, and visual feedback.
@@ -126,20 +132,20 @@ docker-compose up --build
 
 Open **http://localhost:3000**.
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  🌐 Browser (localhost:3000)                            │
-│  React + Konva.js + Recharts                            │
+│  Browser (localhost:3000)                                │
+│  React + Konva.js + Recharts                             │
 └────────────────────────┬────────────────────────────────┘
                          │ WebSocket (Socket.IO)
                          ▼
 ┌─────────────────────────────────────────────────────────┐
-│  ⚙️  FastAPI + Socket.IO (localhost:8000)                │
-│  Physics Engine · Protocol Servers · Real-time State    │
+│  FastAPI + Socket.IO (localhost:8000)                     │
+│  Physics Engine · Protocol Servers · Real-time State     │
 ├─────────────────┬─────────────────┬─────────────────────┤
-│ 🌊 Modbus/TCP   │ 🚦 SNMP Agent   │ ⚡ IEC 61850 MMS   │
+│ Modbus/TCP      │ SNMP Agent      │ IEC 61850 MMS       │
 │ Port 5020       │ Port 5021/udp   │ Port 5022           │
 │ Dam & Treatment │ Traffic Control │ Power Substation    │
 └─────────────────┴─────────────────┴─────────────────────┘
@@ -148,12 +154,6 @@ Open **http://localhost:3000**.
    mbpoll/modpoll    snmpwalk/snmpset   IEC 61850 client
    (Student attacks with standard ICS/OT tooling)
 ```
-
-## Contributors
-
-- Ashish Bhangale, Lead Security Researcher (R&D), [LinkedIn](https://www.linkedin.com/in/hax0rguy/)
-- G Khartheesvar, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/g-khartheesvar/)
-- Litesh Ghute, Sr. Enigneer (R&D), [LinkedIn](https://www.linkedin.com/in/liteshghute/)
 
 ---
 
