@@ -158,3 +158,7 @@ Open **http://localhost:3000**.
 ---
 
 *This project is under active development. New scenarios and features are being added regularly.*
+
+## License
+
+This program is free software: you can redistribute it and/or modify it under the terms of the MIT License.
