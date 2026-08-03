@@ -22,12 +22,15 @@
   <img alt="Scenarios" src="https://img.shields.io/badge/Scenarios-3%20Active-22C55E" />
   <img alt="License" src="https://img.shields.io/badge/License-Educational%20Use-F59E0B" />
   <img alt="Status" src="https://img.shields.io/badge/Status-Active%20Development-blue" />
-
 </p>
 
-Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.
+<p align="center"><strong>Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.</strong></p>
+
+---
 
 A scenario-based training lab where students learn to assess and exploit real-world industrial control systems. Each scenario simulates a different critical infrastructure facility with live physics, real ICS/OT protocols, and visual feedback.
+
+## 🎬 Demo
 
 ![CyberCity ICS/OT Demo](assets/demo.gif)
 
@@ -105,22 +108,32 @@ IEC 61850 is the international standard for substation automation and protection
 
 ## 🚀 Quick Start
 
-### 📋 Prerequisites
+#### 📋 Prerequisites
 
 - **Node.js** 20+ (`brew install node`)
 - **Python** 3.11+ (`brew install python@3.11`)
 - **SNMP tools** for Scenario 2 (`brew install net-snmp`)
 
-### 🔧 Setup
+#### ⚙️ Setup & Run
+
+**Step 1: Clone the repository**
+
+```bash
+git clone https://github.com/ine-labs/cybercity.git
+cd cybercity
+```
+
+**Step 2: Setup**
 
 ```bash
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-### Run (two terminals)
+**Step 3: Run (two terminals)**
 
 **Terminal 1 (Backend):**
+
 ```bash
 cd backend
 source venv/bin/activate
@@ -128,20 +141,25 @@ python main.py
 ```
 
 **Terminal 2 (Frontend):**
+
 ```bash
 cd frontend
 npm run dev
 ```
 
-Open **http://localhost:3000** in your browser.
+**Step 4: Open the app**
 
-### 🐳 Run with Docker (alternative)
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🐳 Run with Docker (alternative)
 
 ```bash
-docker-compose up --build
+git clone https://github.com/ine-labs/cybercity.git
+cd cybercity
+docker compose up --build
 ```
 
-Open **http://localhost:3000**.
+Open [http://localhost:3000](http://localhost:3000).
 
 ## 🏛️ Architecture
 
