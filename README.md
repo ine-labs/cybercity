@@ -16,10 +16,11 @@
   <img alt="Modbus" src="https://img.shields.io/badge/Protocol-Modbus%2FTCP-FF6B35" />
   <img alt="SNMP" src="https://img.shields.io/badge/Protocol-SNMP%20v2c%20%28NTCIP%29-8B5CF6" />
   <img alt="IEC 61850" src="https://img.shields.io/badge/Protocol-IEC%2061850%20MMS-0EA5E9" />
+  <img alt="DNP3" src="https://img.shields.io/badge/Protocol-DNP3-FB923C" />
 </p>
 
 <p align="center">
-  <img alt="Scenarios" src="https://img.shields.io/badge/Scenarios-3%20Active-22C55E" />
+  <img alt="Scenarios" src="https://img.shields.io/badge/Scenarios-4%20Active-22C55E" />
   <img alt="License" src="https://img.shields.io/badge/License-Educational%20Use-F59E0B" />
   <img alt="Status" src="https://img.shields.io/badge/Status-Active%20Development-blue" />
 </p>
@@ -47,7 +48,8 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 | 1 | **HydraGuard**: Dam & Water Treatment Plant | **Modbus/TCP** | 5020 | ✅ Active |
 | 2 | **MetroGrid**: 4-Way Traffic Intersection | **SNMP v2c** (NTCIP) | 5021/udp | ✅ Active |
 | 3 | **Northgate Substation**: 230/115kV Power Grid | **IEC 61850 MMS** | 5022 | ✅ Active |
-| 4+ | **More scenarios in development** | - | - | 🔜 Coming Soon |
+| 4 | **Meridian Compressor Station 7**: Gas Pipeline | **DNP3** | 5023 | ✅ Active |
+| 5+ | **More scenarios in development** | - | - | 🔜 Coming Soon |
 
 ---
 
@@ -105,6 +107,26 @@ IEC 61850 is the international standard for substation automation and protection
 2. **Telemetry**: `read_dataset DS_FULL` to snapshot live measurements
 3. **Selective Tripping**: Trip individual CBs to isolate transformer feeders
 4. **Industroyer Pattern**: Disable all protection → rapid CB trip sequence → block auto-reclosure → permanent blackout
+
+---
+
+### ⛽ Scenario 4: Meridian Compressor Station 7 (Gas Pipeline)
+**Protocol: DNP3** · Port 5023
+
+DNP3 has **no default authentication** — Secure Authentication (SAv5) exists in the standard but is almost never deployed in the field. This scenario mirrors **PIPEDREAM/INCONTROLLER** (CISA/NSA/FBI/DOE advisory AA22-103A, 2022), the most versatile ICS attack toolkit ever publicly documented, purpose-built to sabotage PLCs and safety controllers in gas/LNG and electric infrastructure — and **TRISIS/TRITON** (2017), which directly targeted a Schneider Electric Triconex Safety Instrumented System at a Saudi petrochemical plant. Unlike the other scenarios, this one goes beyond direct register writes: it models genuine **defense-in-depth** (an electronic safety system backed by an independent mechanical relief valve) and a **false-data-injection / telemetry-spoofing** attack that freezes the operator's HMI at "nominal" while the pipeline actually ruptures underneath — the same deception principle behind Stuxnet (2010).
+
+**What you can do:**
+- Enumerate the DNP3 outstation's full point map with a Class 0 integrity poll
+- Overspeed the compressor and watch the Emergency Shutdown System (ESD) safely trip it
+- Bypass the ESD **and** isolate the mechanical Pressure Relief Valve (defeating both defense-in-depth layers, TRISIS-style)
+- Activate an undocumented telemetry-spoofing point so the Control Room shows frozen "nominal" readings
+- Drive the pipeline to a catastrophic overpressure rupture the operator never sees coming
+
+**Attack phases:**
+1. **Reconnaissance**: DNP3 Class 0 integrity poll to enumerate every Analog/Binary Input/Output point
+2. **Setpoint Manipulation**: Direct Operate the compressor RPM setpoint — watch the armed ESD catch it
+3. **TRISIS Pattern**: Disable the ESD *and* close the PRV isolation valve — remove both safety layers
+4. **PIPEDREAM Pattern**: Activate telemetry spoofing, then rupture the pipeline while the HMI stays "green"
 
 ## 🚀 Quick Start
 
@@ -170,17 +192,17 @@ Open [http://localhost:3000](http://localhost:3000).
 └────────────────────────┬────────────────────────────────┘
                          │ WebSocket (Socket.IO)
                          ▼
-┌─────────────────────────────────────────────────────────┐
-│  FastAPI + Socket.IO (localhost:8000)                   │
-│  Physics Engine · Protocol Servers · Real-time State    │
-├─────────────────┬─────────────────┬─────────────────────┤
-│ Modbus/TCP      │ SNMP Agent      │ IEC 61850 MMS       │
-│ Port 5020       │ Port 5021/udp   │ Port 5022           │
-│ Dam & Treatment │ Traffic Control │ Power Substation    │
-└─────────────────┴─────────────────┴─────────────────────┘
-        ▲                 ▲                  ▲
-        │                 │                  │
-   mbpoll/modpoll    snmpwalk/snmpset   IEC 61850 client
+┌───────────────────────────────────────────────────────────────────────┐
+│  FastAPI + Socket.IO (localhost:8000)                                 │
+│  Physics Engine · Protocol Servers · Real-time State                  │
+├─────────────────┬─────────────────┬─────────────────────┬─────────────┤
+│ Modbus/TCP      │ SNMP Agent      │ IEC 61850 MMS       │ DNP3        │
+│ Port 5020       │ Port 5021/udp   │ Port 5022           │ Port 5023   │
+│ Dam & Treatment │ Traffic Control │ Power Substation    │ Gas Pipeline│
+└─────────────────┴─────────────────┴─────────────────────┴─────────────┘
+        ▲                 ▲                  ▲                  ▲
+        │                 │                  │                  │
+   mbpoll/modpoll    snmpwalk/snmpset   IEC 61850 client    DNP3 master
    (Student attacks with standard ICS/OT tooling)
 ```
 
