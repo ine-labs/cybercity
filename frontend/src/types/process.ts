@@ -107,14 +107,48 @@ export interface GridState {
   events: string[];
 }
 
+/** Pipeline Compressor Station state */
+export interface PipelineState {
+  suction_pressure: number;
+  discharge_pressure: number;
+  compressor_rpm: number;
+  rpm_setpoint: number;
+  discharge_temp: number;
+  vibration: number;
+  flow_rate: number;
+  pipe_stress: number;
+
+  suction_valve_open: boolean;
+  discharge_valve_open: boolean;
+  blowdown_valve_open: boolean;
+
+  esd_armed: boolean;
+  prv_block_valve_closed: boolean;
+  esd_tripped: boolean;
+  prv_relieving: boolean;
+  ruptured: boolean;
+  failure_mode: "overpressure_rupture" | "compressor_overspeed" | null;
+
+  high_pressure_alarm: boolean;
+  high_vibration_alarm: boolean;
+  overspeed_alarm: boolean;
+  high_temp_alarm: boolean;
+
+  telemetry_spoofed: boolean;
+
+  events: string[];
+}
+
 /** Full process state from backend */
 export interface ProcessState {
   dam: DamState;
   plant: PlantState;
   traffic: TrafficState;
   grid: GridState;
+  pipeline: PipelineState;
   tick: number;
   uptime: number;
+  spoofing_active?: boolean;
 }
 
 /** WebSocket update payload */

@@ -116,6 +116,37 @@ const SCENARIOS = [
       </svg>
     ),
   },
+  {
+    id: "pipeline",
+    title: "Meridian Compressor Station 7",
+    subtitle: "DNP3 — Pipeline Overpressure & Deception",
+    description:
+      "Breach a gas pipeline compressor station's DNP3 outstation. Bypass the electronic safety system and mechanical relief valve, then use false-data injection to hide a catastrophic overpressure rupture from the operator HMI.",
+    status: "active" as const,
+    gradient: "from-orange-950 via-stone-900 to-red-950",
+    border: "border-orange-800",
+    icon: (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        {/* Pipeline */}
+        <rect x="0" y="38" width="100" height="6" fill="#78350f" opacity="0.8" />
+        {/* Compressor housing */}
+        <circle cx="45" cy="32" r="13" fill="none" stroke="#fb923c" strokeWidth="2" />
+        <line x1="45" y1="32" x2="53" y2="26" stroke="#fb923c" strokeWidth="1.5" />
+        <line x1="45" y1="32" x2="37" y2="26" stroke="#fb923c" strokeWidth="1.5" opacity="0.6" />
+        <line x1="45" y1="32" x2="53" y2="38" stroke="#fb923c" strokeWidth="1.5" opacity="0.6" />
+        {/* Vent stacks */}
+        <line x1="65" y1="16" x2="65" y2="38" stroke="#6b7280" strokeWidth="2" />
+        <circle cx="65" cy="12" r="3" fill="#f97316" opacity="0.8" />
+        <circle cx="65" cy="9" r="1.8" fill="#fbbf24" opacity="0.9" />
+        <line x1="80" y1="20" x2="80" y2="38" stroke="#6b7280" strokeWidth="2" />
+        {/* Valves */}
+        <rect x="16" y="34" width="7" height="8" fill="#374151" stroke="#22c55e" strokeWidth="0.8" />
+        <rect x="86" y="34" width="7" height="8" fill="#374151" stroke="#ef4444" strokeWidth="0.8" />
+        {/* Gauge */}
+        <circle cx="45" cy="50" r="4" fill="none" stroke="#f59e0b" strokeWidth="1" />
+      </svg>
+    ),
+  },
 ];
 
 export function CityView({ onSelectScenario }: CityViewProps) {
@@ -125,9 +156,11 @@ export function CityView({ onSelectScenario }: CityViewProps) {
       <div className="border-b border-gray-800 bg-gray-900">
         <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-              CC
-            </div>
+            <img
+              src="/cybercity-logo.jpg"
+              alt="CyberCity ICS/OT"
+              className="w-14 h-14 rounded-lg object-cover border border-gray-700 shadow-lg shadow-blue-900/30"
+            />
             <div>
               <h1 className="text-2xl font-mono font-bold text-gray-100">
                 CyberCity ICS/OT

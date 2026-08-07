@@ -16,6 +16,7 @@ from simulation.process_engine import ProcessEngine
 from modbus_server.server import ModbusPLCServer
 from snmp_server.agent import SNMPTrafficController
 from iec61850_server.server import IEC61850Server
+from dnp3_server.server import DNP3OutstationServer
 
 # Logging
 logging.basicConfig(
@@ -53,6 +54,7 @@ engine        = ProcessEngine()
 modbus_server = ModbusPLCServer(host="0.0.0.0", port=5020)
 snmp_server   = SNMPTrafficController(host="0.0.0.0", port=5021)
 iec61850      = IEC61850Server(host="0.0.0.0", port=5022)
+dnp3_server   = DNP3OutstationServer(host="0.0.0.0", port=5023)
 
 
 # ─── Socket.IO Events ────────────────────────────────────────────────
@@ -144,6 +146,32 @@ async def manual_control(sid, data):
         engine.grid.reset()
         iec61850.reset()
 
+    # ─── Pipeline Compressor Station scenario ─────────────────────────
+    elif command == "pipeline_set_rpm":
+        engine.pipeline.set_rpm_setpoint(float(value))
+        dnp3_server._values[("AO", 0)] = engine.pipeline.rpm_setpoint
+    elif command == "pipeline_toggle_esd_armed":
+        engine.pipeline.esd_armed = not engine.pipeline.esd_armed
+        dnp3_server._values[("BO", 0)] = engine.pipeline.esd_armed
+    elif command == "pipeline_toggle_prv_block":
+        engine.pipeline.prv_block_valve_closed = not engine.pipeline.prv_block_valve_closed
+        dnp3_server._values[("BO", 1)] = engine.pipeline.prv_block_valve_closed
+    elif command == "pipeline_toggle_suction_valve":
+        engine.pipeline.suction_valve_open = not engine.pipeline.suction_valve_open
+        dnp3_server._values[("BO", 2)] = engine.pipeline.suction_valve_open
+    elif command == "pipeline_toggle_discharge_valve":
+        engine.pipeline.discharge_valve_open = not engine.pipeline.discharge_valve_open
+        dnp3_server._values[("BO", 3)] = engine.pipeline.discharge_valve_open
+    elif command == "pipeline_set_blowdown_valve":
+        engine.pipeline.blowdown_valve_open = bool(value)
+        dnp3_server._values[("BO", 4)] = engine.pipeline.blowdown_valve_open
+    elif command == "pipeline_toggle_spoof":
+        engine.pipeline.telemetry_spoofed = not engine.pipeline.telemetry_spoofed
+        dnp3_server._values[("BO", 5)] = engine.pipeline.telemetry_spoofed
+    elif command == "pipeline_reset":
+        engine.pipeline.reset()
+        dnp3_server.reset()
+
 
 # ─── REST API Endpoints ──────────────────────────────────────────────
 
@@ -155,6 +183,7 @@ async def get_status():
         "modbus_port":  modbus_server.port,
         "snmp_port":    snmp_server.port,
         "iec61850_port": iec61850.port,
+        "dnp3_port":    dnp3_server.port,
     }
 
 
@@ -164,6 +193,7 @@ async def reset_simulation():
     modbus_server._set_initial_values()
     snmp_server.reset()
     iec61850.reset()
+    dnp3_server.reset()
     logger.info("All simulations reset to safe defaults")
     return {"status": "reset", "message": "All systems returned to normal"}
 
@@ -216,6 +246,24 @@ async def pre_tick_sync():
         elif ref == "RREC1.Beh.stVal":
             engine.grid.autorecloser_enabled = bool(value)
 
+    # ─── Pipeline Compressor Station (DNP3 Direct Operate writes) ───────
+    pipeline_writes = dnp3_server.read_attacker_writes()
+    for name, value in pipeline_writes.items():
+        if name == "rpm_setpoint":
+            engine.pipeline.set_rpm_setpoint(float(value))
+        elif name == "esd_armed":
+            engine.pipeline.esd_armed = bool(value)
+        elif name == "prv_block_valve_closed":
+            engine.pipeline.prv_block_valve_closed = bool(value)
+        elif name == "suction_valve_open":
+            engine.pipeline.suction_valve_open = bool(value)
+        elif name == "discharge_valve_open":
+            engine.pipeline.discharge_valve_open = bool(value)
+        elif name == "blowdown_valve_open":
+            engine.pipeline.blowdown_valve_open = bool(value)
+        elif name == "telemetry_spoofed":
+            engine.pipeline.telemetry_spoofed = bool(value)
+
 
 async def post_tick_sync(displayed_state: dict, actual_state: dict):
     """Called AFTER each tick — pushes simulation values to protocol servers and WebSocket."""
@@ -230,6 +278,9 @@ async def post_tick_sync(displayed_state: dict, actual_state: dict):
 
     # Sync grid → IEC 61850 MMS store
     iec61850.update_from_simulation(actual_state["grid"])
+
+    # Sync pipeline → DNP3 outstation
+    dnp3_server.update_from_simulation(actual_state["pipeline"])
 
     # Push to all WebSocket clients
     await sio.emit("process_update", {
@@ -253,6 +304,9 @@ async def startup():
 
     asyncio.create_task(iec61850.start())
     logger.info(f"IEC 61850 MMS server starting on TCP port {iec61850.port}")
+
+    asyncio.create_task(dnp3_server.start())
+    logger.info(f"DNP3 outstation starting on TCP port {dnp3_server.port}")
 
     asyncio.create_task(
         engine.run_loop(on_pre_tick=pre_tick_sync, on_tick=post_tick_sync)

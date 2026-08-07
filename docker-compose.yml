@@ -6,6 +6,7 @@ services:
       - "5020:5020"         # Modbus/TCP      — Scenario 1: HydraGuard
       - "5021:5021/udp"     # SNMP v2c        — Scenario 2: MetroGrid Traffic
       - "5022:5022"         # IEC 61850 MMS   — Scenario 3: Northgate Substation
+      - "5023:5023"         # DNP3            — Scenario 4: Meridian Compressor Station
     environment:
       - PYTHONUNBUFFERED=1
     volumes:

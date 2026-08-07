@@ -1,4 +1,5 @@
-import { useState, Component, type ReactNode, type ErrorInfo } from "react";
+import { Component, type ReactNode, type ErrorInfo } from "react";
+import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useProcessData } from "./hooks/useProcessData";
 import { DamView } from "./components/dam/DamView";
 import { TreatmentView } from "./components/treatment/TreatmentView";
@@ -10,12 +11,25 @@ import { TrafficLabMonitor } from "./components/traffic/TrafficLabMonitor";
 import { SubstationView } from "./components/grid/SubstationView";
 import { GridControlRoom } from "./components/grid/GridControlRoom";
 import { GridLabMonitor } from "./components/grid/GridLabMonitor";
+import { CompressorStationView } from "./components/pipeline/CompressorStationView";
+import { PipelineControlRoom } from "./components/pipeline/PipelineControlRoom";
+import { PipelineLabMonitor } from "./components/pipeline/PipelineLabMonitor";
 import { CityView } from "./components/city/CityView";
 
 type DamView_ = "dam" | "treatment" | "controlroom" | "attack";
 type TrafficView = "intersection" | "controlroom" | "lab";
 type GridView = "substation" | "controlroom" | "lab";
-type Screen = "city" | "dam" | "traffic" | "powergrid";
+type PipelineView_ = "station" | "controlroom" | "lab";
+type Scenario = "dam" | "traffic" | "powergrid" | "pipeline";
+
+const SCENARIOS: Scenario[] = ["dam", "traffic", "powergrid", "pipeline"];
+
+const DEFAULT_VIEW: Record<Scenario, string> = {
+  dam: "dam",
+  traffic: "intersection",
+  powergrid: "substation",
+  pipeline: "station",
+};
 
 const DAM_NAV: { id: DamView_; label: string; color: string }[] = [
   { id: "dam", label: "Dam Overview", color: "text-blue-400" },
@@ -32,6 +46,12 @@ const TRAFFIC_NAV: { id: TrafficView; label: string; color: string }[] = [
 
 const GRID_NAV: { id: GridView; label: string; color: string }[] = [
   { id: "substation", label: "Substation SLD", color: "text-yellow-400" },
+  { id: "controlroom", label: "Control Room", color: "text-green-400" },
+  { id: "lab", label: "Lab Monitor", color: "text-red-400" },
+];
+
+const PIPELINE_NAV: { id: PipelineView_; label: string; color: string }[] = [
+  { id: "station", label: "Station View", color: "text-orange-400" },
   { id: "controlroom", label: "Control Room", color: "text-green-400" },
   { id: "lab", label: "Lab Monitor", color: "text-red-400" },
 ];
@@ -70,30 +90,31 @@ class ErrorBoundary extends Component<
   }
 }
 
-function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("city");
-  const [damView, setDamView] = useState<DamView_>("dam");
-  const [trafficView, setTrafficView] = useState<TrafficView>("intersection");
-  const [gridView, setGridView] = useState<GridView>("substation");
-  const { displayed, actual, connected, sendCommand } = useProcessData();
+type ProcessData = ReturnType<typeof useProcessData>;
 
-  // ─── City Overview ──────────────────────────────────────────
-  if (currentScreen === "city") {
-    return (
-      <CityView
-        onSelectScenario={(id) => setCurrentScreen(id as Screen)}
-      />
-    );
+function ScenarioShell({ displayed, actual, connected, sendCommand }: ProcessData) {
+  const { scenario, view } = useParams<{ scenario: string; view: string }>();
+  const navigate = useNavigate();
+
+  if (!scenario || !SCENARIOS.includes(scenario as Scenario)) {
+    return <Navigate to="/" replace />;
   }
+  const currentScreen = scenario as Scenario;
 
-  // ─── Scenario Shell (shared nav bar) ─────────────────────────
   const isDam      = currentScreen === "dam";
   const isTraffic  = currentScreen === "traffic";
   const isGrid     = currentScreen === "powergrid";
+  const isPipeline = currentScreen === "pipeline";
 
-  const scenarioLabel = isDam ? "HydraGuard" : isTraffic ? "Traffic Controller" : "Northgate Substation";
-  const scenarioIcon  = isDam ? "HG" : isTraffic ? "TC" : "PS";
-  const scenarioBg    = isDam ? "bg-blue-600" : isTraffic ? "bg-amber-600" : "bg-yellow-600";
+  const damView      = (DAM_NAV.some(n => n.id === view) ? view : "dam") as DamView_;
+  const trafficView  = (TRAFFIC_NAV.some(n => n.id === view) ? view : "intersection") as TrafficView;
+  const gridView     = (GRID_NAV.some(n => n.id === view) ? view : "substation") as GridView;
+  const pipelineView = (PIPELINE_NAV.some(n => n.id === view) ? view : "station") as PipelineView_;
+
+  const scenarioLabel = isDam ? "HydraGuard" : isTraffic ? "Traffic Controller" :
+    isGrid ? "Northgate Substation" : "Meridian Compressor Station 7";
+  const scenarioIcon  = isDam ? "HG" : isTraffic ? "TC" : isGrid ? "PS" : "CS";
+  const scenarioBg    = isDam ? "bg-blue-600" : isTraffic ? "bg-amber-600" : isGrid ? "bg-yellow-600" : "bg-orange-600";
 
   return (
     <ErrorBoundary name="ScenarioShell">
@@ -103,7 +124,7 @@ function App() {
         <div className="flex items-center gap-4">
           {/* Back to city */}
           <button
-            onClick={() => setCurrentScreen("city")}
+            onClick={() => navigate("/")}
             className="text-gray-500 hover:text-gray-300 font-mono text-xs px-2 py-1 rounded hover:bg-gray-800 transition-colors"
             title="Back to City"
           >
@@ -128,7 +149,7 @@ function App() {
               DAM_NAV.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setDamView(item.id)}
+                  onClick={() => navigate(`/dam/${item.id}`)}
                   className={`px-3 py-1.5 rounded font-mono text-xs transition-colors ${
                     damView === item.id
                       ? `bg-gray-800 ${item.color} border border-gray-700`
@@ -142,7 +163,7 @@ function App() {
               TRAFFIC_NAV.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setTrafficView(item.id)}
+                  onClick={() => navigate(`/traffic/${item.id}`)}
                   className={`px-3 py-1.5 rounded font-mono text-xs transition-colors ${
                     trafficView === item.id
                       ? `bg-gray-800 ${item.color} border border-gray-700`
@@ -156,9 +177,23 @@ function App() {
               GRID_NAV.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setGridView(item.id)}
+                  onClick={() => navigate(`/powergrid/${item.id}`)}
                   className={`px-3 py-1.5 rounded font-mono text-xs transition-colors ${
                     gridView === item.id
+                      ? `bg-gray-800 ${item.color} border border-gray-700`
+                      : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            {isPipeline &&
+              PIPELINE_NAV.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(`/pipeline/${item.id}`)}
+                  className={`px-3 py-1.5 rounded font-mono text-xs transition-colors ${
+                    pipelineView === item.id
                       ? `bg-gray-800 ${item.color} border border-gray-700`
                       : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
                   }`}
@@ -248,9 +283,50 @@ function App() {
             </div>
           </>
         )}
+
+        {/* Pipeline Compressor Station Scenario Views */}
+        {isPipeline && (
+          <>
+            <div style={{ display: pipelineView === "station" ? "block" : "none" }}>
+              <ErrorBoundary name="CompressorStationView">
+                <CompressorStationView pipeline={displayed.pipeline} />
+              </ErrorBoundary>
+            </div>
+            <div style={{ display: pipelineView === "controlroom" ? "block" : "none" }}>
+              <ErrorBoundary name="PipelineControlRoom">
+                <PipelineControlRoom state={displayed} sendCommand={sendCommand} />
+              </ErrorBoundary>
+            </div>
+            <div style={{ display: pipelineView === "lab" ? "block" : "none" }}>
+              <ErrorBoundary name="PipelineLabMonitor">
+                <PipelineLabMonitor displayed={displayed} actual={actual} />
+              </ErrorBoundary>
+            </div>
+          </>
+        )}
       </main>
     </div>
     </ErrorBoundary>
+  );
+}
+
+function App() {
+  const processData = useProcessData();
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <CityView
+            onSelectScenario={(id) => navigate(`/${id}/${DEFAULT_VIEW[id as Scenario]}`)}
+          />
+        }
+      />
+      <Route path="/:scenario/:view" element={<ScenarioShell {...processData} />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
