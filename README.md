@@ -20,9 +20,9 @@
 </p>
 
 <p align="center">
-  <img alt="Scenarios" src="https://img.shields.io/badge/Scenarios-4%20Active-22C55E" />
   <img alt="License" src="https://img.shields.io/badge/License-Educational%20Use-F59E0B" />
   <img alt="Status" src="https://img.shields.io/badge/Status-Active%20Development-blue" />
+  <a href="https://www.blackhat-india.com/arsenal-schedule#cybercity---icsot-cybersecurity-training-platform-60014" target="_blank" rel="noopener noreferrer"><img alt="Black Hat Arsenal" src="https://img.shields.io/badge/Black%20Hat-Arsenal%20India%202026-8B5CF6" /></a>
 </p>
 
 <p align="center"><strong>Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.</strong></p>
@@ -30,6 +30,8 @@
 ---
 
 A scenario-based training lab where students learn to assess and exploit real-world industrial control systems. Each scenario simulates a different critical infrastructure facility with live physics, real ICS/OT protocols, and visual feedback.
+
+<p align="center">🏆 <strong>Featuring at <a href="https://www.blackhat-india.com/arsenal-schedule#cybercity---icsot-cybersecurity-training-platform-60014" target="_blank" rel="noopener noreferrer">Black Hat India 2026 Arsenal</a></strong></p>
 
 ## 🎬 Demo
 
