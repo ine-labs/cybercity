@@ -23,7 +23,6 @@
   <img alt="Scenarios" src="https://img.shields.io/badge/Scenarios-4%20Active-22C55E" />
   <img alt="License" src="https://img.shields.io/badge/License-Educational%20Use-F59E0B" />
   <img alt="Status" src="https://img.shields.io/badge/Status-Active%20Development-blue" />
-  <a href="https://www.blackhat-india.com/arsenal-schedule#cybercity---icsot-cybersecurity-training-platform-60014" target="_blank" rel="noopener noreferrer"><img alt="Black Hat Arsenal" src="https://img.shields.io/badge/Black%20Hat-Arsenal%20India%202026-8B5CF6" /></a>
 </p>
 
 <p align="center"><strong>Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.</strong></p>
