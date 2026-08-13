@@ -17,6 +17,7 @@ from modbus_server.server import ModbusPLCServer
 from snmp_server.agent import SNMPTrafficController
 from iec61850_server.server import IEC61850Server
 from dnp3_server.server import DNP3OutstationServer
+from operator_hmi import OperatorHMI
 
 # Logging
 logging.basicConfig(
@@ -55,6 +56,10 @@ modbus_server = ModbusPLCServer(host="0.0.0.0", port=5020)
 snmp_server   = SNMPTrafficController(host="0.0.0.0", port=5021)
 iec61850      = IEC61850Server(host="0.0.0.0", port=5022)
 dnp3_server   = DNP3OutstationServer(host="0.0.0.0", port=5023)
+
+# Simulated plant operator HMI — continuously polls the Modbus PLC so the
+# network carries genuine operator↔PLC traffic to eavesdrop on (Scenario 1, Phase 2)
+operator_hmi  = OperatorHMI(host="127.0.0.1", port=5020)
 
 
 # ─── Socket.IO Events ────────────────────────────────────────────────
@@ -307,6 +312,9 @@ async def startup():
 
     asyncio.create_task(dnp3_server.start())
     logger.info(f"DNP3 outstation starting on TCP port {dnp3_server.port}")
+
+    asyncio.create_task(operator_hmi.start())
+    logger.info("Operator HMI (Modbus master) starting — live polling traffic on 5020")
 
     asyncio.create_task(
         engine.run_loop(on_pre_tick=pre_tick_sync, on_tick=post_tick_sync)
