@@ -18,6 +18,7 @@ from pymodbus.datastore import (
     ModbusSlaveContext,
 )
 from pymodbus.server import StartAsyncTcpServer
+from pymodbus.device import ModbusDeviceIdentification
 
 from modbus_server.registers import (
     NUM_COILS,
@@ -162,10 +163,28 @@ class ModbusPLCServer:
             "chlorine_dosing_rate": slave.getValues(3, 4, count=1)[0] / 100.0,
         }
 
+    def _build_identity(self) -> ModbusDeviceIdentification:
+        """
+        Device Identification (Modbus function 0x2B / MEI 0x0E).
+        Lets recon tools (nmap `modbus-discover`, `-sV`, Metasploit) positively
+        fingerprint this as a real Modbus PLC — mirrors a fielded Schneider
+        Modicon dam controller instead of an anonymous open port.
+        """
+        identity = ModbusDeviceIdentification()
+        identity.VendorName          = "Schneider Electric"
+        identity.ProductCode         = "BMXP342020"
+        identity.VendorUrl           = "https://www.se.com"
+        identity.ProductName         = "Modicon M340 PLC"
+        identity.ModelName           = "HydraGuard Dam Controller"
+        identity.MajorMinorRevision  = "2.7"
+        identity.UserApplicationName = "HydraGuard SCADA"
+        return identity
+
     async def start(self):
         """Start the Modbus TCP server."""
         logger.info(f"Starting Modbus TCP server on {self.host}:{self.port}")
         await StartAsyncTcpServer(
             context=self.context,
+            identity=self._build_identity(),
             address=(self.host, self.port),
         )

@@ -67,11 +67,55 @@ function WaterParticles({
   );
 }
 
-export function DamView({ dam }: DamViewProps) {
-  const WIDTH = 900;
-  const HEIGHT = 550;
+/**
+ * Measure the container so the scene can be reflowed to the real canvas size:
+ * full width, and height locked to the remaining viewport (so it never scrolls).
+ */
+function useContainerBox<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      if (el.clientWidth === 0) return; // hidden tab — skip
+      setBox({
+        w: el.clientWidth,
+        h: Math.max(320, window.innerHeight - rect.top - 8),
+      });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+  return [ref, box] as const;
+}
 
-  // Dam structure dimensions
+// Native design space — every element is authored against this, then mapped
+// onto the live canvas. Positions fill the full area (X/Y); circles, gauges and
+// text scale uniformly (S) so nothing ever looks stretched.
+const DW = 900;
+const DH = 550;
+
+export function DamView({ dam }: DamViewProps) {
+  const [wrapRef, box] = useContainerBox<HTMLDivElement>();
+  const W = box.w || DW;
+  const H = box.h || DH;
+
+  const sx = W / DW;
+  const sy = H / DH;
+  const k = Math.min(sx, sy);
+  const X = (v: number) => v * sx; // horizontal position / length
+  const Y = (v: number) => v * sy; // vertical position / length
+  const S = (v: number) => v * k;  // uniform size (radius, font, stroke)
+
+  // Dam structure dimensions (design space)
   const damX = 350;
   const damWidth = 30;
   const damTop = 80;
@@ -93,27 +137,27 @@ export function DamView({ dam }: DamViewProps) {
   const bgColor = dam.overflow ? "#1a0505" : "#0f172a";
 
   return (
-    <div className="relative">
-      <Stage width={WIDTH} height={HEIGHT}>
+    <div ref={wrapRef} className="w-full">
+      <Stage width={W} height={H}>
         <Layer>
           {/* Background */}
-          <Rect width={WIDTH} height={HEIGHT} fill={bgColor} />
+          <Rect width={W} height={H} fill={bgColor} />
 
           {/* Title */}
           <Text
             text="DAM OVERVIEW"
-            x={20}
-            y={15}
-            fontSize={18}
+            x={X(20)}
+            y={Y(15)}
+            fontSize={S(18)}
             fill="#e2e8f0"
             fontFamily="monospace"
             fontStyle="bold"
           />
           <Text
             text={dam.overflow ? "!! OVERFLOW !!" : dam.high_level_alarm ? "! HIGH LEVEL !" : "NORMAL OPERATION"}
-            x={20}
-            y={38}
-            fontSize={13}
+            x={X(20)}
+            y={Y(38)}
+            fontSize={S(13)}
             fill={dam.overflow ? "#ef4444" : dam.high_level_alarm ? "#fbbf24" : "#22c55e"}
             fontFamily="monospace"
           />
@@ -121,18 +165,18 @@ export function DamView({ dam }: DamViewProps) {
           {/* ── Reservoir (left side of dam) ── */}
           {/* Reservoir basin shape */}
           <Line
-            points={[50, damTop, 50, damBottom + 20, damX, damBottom + 20, damX, damTop]}
+            points={[X(50), Y(damTop), X(50), Y(damBottom + 20), X(damX), Y(damBottom + 20), X(damX), Y(damTop)]}
             stroke="#475569"
-            strokeWidth={3}
+            strokeWidth={S(3)}
             closed={false}
           />
 
           {/* Water fill */}
           <Rect
-            x={52}
-            y={waterTop}
-            width={damX - 54}
-            height={waterHeight + 20}
+            x={X(52)}
+            y={Y(waterTop)}
+            width={X(damX - 54)}
+            height={Y(waterHeight + 20)}
             fill={waterColor}
             opacity={0.7}
           />
@@ -140,37 +184,37 @@ export function DamView({ dam }: DamViewProps) {
           {/* Water surface waves */}
           <Line
             points={Array.from({ length: 30 }, (_, i) => {
-              const px = 52 + (i / 29) * (damX - 54);
-              const py = waterTop + Math.sin(Date.now() * 0.003 + i * 0.5) * 2;
+              const px = X(52 + (i / 29) * (damX - 54));
+              const py = Y(waterTop) + Math.sin(Date.now() * 0.003 + i * 0.5) * S(2);
               return [px, py];
             }).flat()}
             stroke="#93c5fd"
-            strokeWidth={2}
+            strokeWidth={S(2)}
             opacity={0.8}
           />
 
           {/* ── Dam wall ── */}
           <Rect
-            x={damX}
-            y={damTop}
-            width={damWidth}
-            height={damHeight + 20}
+            x={X(damX)}
+            y={Y(damTop)}
+            width={X(damWidth)}
+            height={Y(damHeight + 20)}
             fill="#64748b"
             stroke="#94a3b8"
-            strokeWidth={2}
+            strokeWidth={S(2)}
           />
           {/* Dam texture lines */}
           {Array.from({ length: 8 }, (_, i) => (
             <Line
               key={`dtex-${i}`}
-              points={[damX, damTop + i * 40 + 20, damX + damWidth, damTop + i * 40 + 20]}
+              points={[X(damX), Y(damTop + i * 40 + 20), X(damX + damWidth), Y(damTop + i * 40 + 20)]}
               stroke="#475569"
-              strokeWidth={1}
+              strokeWidth={S(1)}
             />
           ))}
 
           {/* ── Sluice Gate ── */}
-          <Group x={damX} y={damBottom - gateMaxHeight}>
+          <Group x={X(damX)} y={Y(damBottom - gateMaxHeight)} scaleX={sx} scaleY={sy}>
             {/* Gate housing */}
             <Rect
               x={-5}
@@ -207,21 +251,21 @@ export function DamView({ dam }: DamViewProps) {
           {/* ── Outflow channel (right side of dam) ── */}
           <Line
             points={[
-              damX + damWidth, damBottom + 20,
-              damX + damWidth + 200, damBottom + 20,
-              damX + damWidth + 200, damBottom - 20,
+              X(damX + damWidth), Y(damBottom + 20),
+              X(damX + damWidth + 200), Y(damBottom + 20),
+              X(damX + damWidth + 200), Y(damBottom - 20),
             ]}
             stroke="#475569"
-            strokeWidth={2}
+            strokeWidth={S(2)}
           />
 
           {/* Outflow water */}
           {dam.gate_position > 2 && (
             <Rect
-              x={damX + damWidth}
-              y={damBottom}
-              width={200}
-              height={20}
+              x={X(damX + damWidth)}
+              y={Y(damBottom)}
+              width={X(200)}
+              height={Y(20)}
               fill="#2563eb"
               opacity={0.5}
             />
@@ -229,9 +273,9 @@ export function DamView({ dam }: DamViewProps) {
 
           {/* Flow particles */}
           <WaterParticles
-            x={damX + damWidth + 5}
-            y={damBottom + 10}
-            width={190}
+            x={X(damX + damWidth + 5)}
+            y={Y(damBottom + 10)}
+            width={X(190)}
             count={15}
             speed={dam.gate_position / 20}
             active={dam.gate_position > 2}
@@ -239,9 +283,9 @@ export function DamView({ dam }: DamViewProps) {
 
           {/* Inflow particles (top-left) */}
           <WaterParticles
-            x={50}
-            y={waterTop + 5}
-            width={100}
+            x={X(50)}
+            y={Y(waterTop + 5)}
+            width={X(100)}
             count={10}
             speed={2}
             active={dam.inflow_rate > 10}
@@ -250,9 +294,9 @@ export function DamView({ dam }: DamViewProps) {
           {/* Inflow arrow label */}
           <Text
             text={`INFLOW: ${dam.inflow_rate.toFixed(0)} m³/s →`}
-            x={55}
-            y={waterTop - 20}
-            fontSize={11}
+            x={X(55)}
+            y={Y(waterTop - 20)}
+            fontSize={S(11)}
             fill="#60a5fa"
             fontFamily="monospace"
           />
@@ -260,9 +304,9 @@ export function DamView({ dam }: DamViewProps) {
           {/* Outflow label */}
           <Text
             text={`→ OUTFLOW: ${dam.outflow_rate.toFixed(0)} m³/s`}
-            x={damX + damWidth + 10}
-            y={damBottom - 35}
-            fontSize={11}
+            x={X(damX + damWidth + 10)}
+            y={Y(damBottom - 35)}
+            fontSize={S(11)}
             fill="#60a5fa"
             fontFamily="monospace"
           />
@@ -270,48 +314,48 @@ export function DamView({ dam }: DamViewProps) {
           {/* "To Treatment Plant →" label */}
           <Text
             text="→ To Treatment Plant"
-            x={damX + damWidth + 100}
-            y={damBottom + 5}
-            fontSize={10}
+            x={X(damX + damWidth + 100)}
+            y={Y(damBottom + 5)}
+            fontSize={S(10)}
             fill="#94a3b8"
             fontFamily="monospace"
           />
 
           {/* ── Water Level Gauge Bar ── */}
-          <Group x={20} y={damTop}>
+          <Group x={X(20)} y={Y(damTop)}>
             <Rect
               x={0}
               y={0}
-              width={20}
-              height={damHeight}
+              width={X(20)}
+              height={Y(damHeight)}
               fill="#1e293b"
               stroke="#475569"
-              strokeWidth={1}
+              strokeWidth={S(1)}
             />
             {/* Danger zone (top) */}
             <Rect
               x={0}
               y={0}
-              width={20}
-              height={damHeight * 0.15}
+              width={X(20)}
+              height={Y(damHeight * 0.15)}
               fill="#dc2626"
               opacity={0.3}
             />
             {/* Warning zone */}
             <Rect
               x={0}
-              y={damHeight * 0.15}
-              width={20}
-              height={damHeight * 0.1}
+              y={Y(damHeight * 0.15)}
+              width={X(20)}
+              height={Y(damHeight * 0.1)}
               fill="#f59e0b"
               opacity={0.3}
             />
             {/* Current level indicator */}
             <Rect
               x={0}
-              y={damHeight - waterHeight}
-              width={20}
-              height={waterHeight}
+              y={Y(damHeight - waterHeight)}
+              width={X(20)}
+              height={Y(waterHeight)}
               fill={waterColor}
               opacity={0.8}
             />
@@ -320,9 +364,9 @@ export function DamView({ dam }: DamViewProps) {
               <Text
                 key={`scale-${val}`}
                 text={`${val}`}
-                x={24}
-                y={damHeight - (val / 100) * damHeight - 5}
-                fontSize={9}
+                x={X(24)}
+                y={Y(damHeight - (val / 100) * damHeight) - S(5)}
+                fontSize={S(9)}
                 fill="#9ca3af"
                 fontFamily="monospace"
               />
@@ -331,9 +375,9 @@ export function DamView({ dam }: DamViewProps) {
 
           {/* ── Gauges ── */}
           <Gauge
-            x={650}
-            y={100}
-            radius={55}
+            x={X(650)}
+            y={Y(100)}
+            radius={S(55)}
             value={dam.water_level}
             min={0}
             max={100}
@@ -344,9 +388,9 @@ export function DamView({ dam }: DamViewProps) {
           />
 
           <Gauge
-            x={800}
-            y={100}
-            radius={55}
+            x={X(800)}
+            y={Y(100)}
+            radius={S(55)}
             value={dam.gate_position}
             min={0}
             max={100}
@@ -355,9 +399,9 @@ export function DamView({ dam }: DamViewProps) {
           />
 
           <Gauge
-            x={650}
-            y={260}
-            radius={55}
+            x={X(650)}
+            y={Y(260)}
+            radius={S(55)}
             value={dam.inflow_rate}
             min={0}
             max={300}
@@ -366,9 +410,9 @@ export function DamView({ dam }: DamViewProps) {
           />
 
           <Gauge
-            x={800}
-            y={260}
-            radius={55}
+            x={X(800)}
+            y={Y(260)}
+            radius={S(55)}
             value={dam.outflow_rate}
             min={0}
             max={300}
@@ -378,29 +422,33 @@ export function DamView({ dam }: DamViewProps) {
 
           {/* ── Alarm indicators ── */}
           <StatusLight
-            x={640}
-            y={380}
+            x={X(640)}
+            y={Y(380)}
+            size={S(10)}
             active={dam.high_level_alarm}
             label="HIGH LEVEL"
             color="#ef4444"
           />
           <StatusLight
-            x={640}
-            y={410}
+            x={X(640)}
+            y={Y(410)}
+            size={S(10)}
             active={dam.low_level_alarm}
             label="LOW LEVEL"
             color="#f59e0b"
           />
           <StatusLight
-            x={640}
-            y={440}
+            x={X(640)}
+            y={Y(440)}
+            size={S(10)}
             active={dam.spillway_active}
             label="SPILLWAY"
             color="#f97316"
           />
           <StatusLight
-            x={640}
-            y={470}
+            x={X(640)}
+            y={Y(470)}
+            size={S(10)}
             active={dam.overflow}
             label="OVERFLOW"
             color="#dc2626"
@@ -411,9 +459,9 @@ export function DamView({ dam }: DamViewProps) {
             <Group>
               <Text
                 text="⚠ SPILLWAY ACTIVE"
-                x={150}
-                y={damTop - 15}
-                fontSize={14}
+                x={X(150)}
+                y={Y(damTop - 15)}
+                fontSize={S(14)}
                 fill="#f97316"
                 fontFamily="monospace"
                 fontStyle="bold"
@@ -423,31 +471,31 @@ export function DamView({ dam }: DamViewProps) {
 
           {/* Ground/terrain */}
           <Line
-            points={[0, damBottom + 22, WIDTH, damBottom + 22]}
+            points={[0, Y(damBottom + 22), W, Y(damBottom + 22)]}
             stroke="#334155"
-            strokeWidth={2}
+            strokeWidth={S(2)}
           />
           <Rect
             x={0}
-            y={damBottom + 22}
-            width={WIDTH}
-            height={HEIGHT - damBottom - 22}
+            y={Y(damBottom + 22)}
+            width={W}
+            height={H - Y(damBottom + 22)}
             fill="#1e293b"
           />
 
           {/* Bottom info bar */}
           <Rect
             x={0}
-            y={HEIGHT - 40}
-            width={WIDTH}
-            height={40}
+            y={Y(DH - 40)}
+            width={W}
+            height={Y(40)}
             fill="#0f172a"
           />
           <Text
             text={`Gate Target: ${dam.gate_target.toFixed(0)}%  |  Level: ${dam.water_level.toFixed(1)}m  |  Net Flow: ${(dam.inflow_rate - dam.outflow_rate).toFixed(1)} m³/s`}
-            x={20}
-            y={HEIGHT - 28}
-            fontSize={12}
+            x={X(20)}
+            y={Y(DH - 28)}
+            fontSize={S(12)}
             fill="#94a3b8"
             fontFamily="monospace"
           />

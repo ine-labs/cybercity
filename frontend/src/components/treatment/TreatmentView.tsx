@@ -1,4 +1,5 @@
 import { Stage, Layer, Rect, Line, Text, Group, Circle } from "react-konva";
+import { useState, useEffect, useRef } from "react";
 import { Gauge } from "../shared/Gauge";
 import { StatusLight } from "../shared/StatusLight";
 import type { PlantState, StageStatus } from "../../types/process";
@@ -21,6 +22,36 @@ const STAGE_LABELS: Record<StageStatus, string> = {
   3: "CRITICAL",
 };
 
+/**
+ * Measure the container so the scene can be reflowed to the real canvas size:
+ * full width, and height locked to the remaining viewport (so it never scrolls).
+ */
+function useContainerBox<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      if (el.clientWidth === 0) return; // hidden tab — skip
+      setBox({
+        w: el.clientWidth,
+        h: Math.max(320, window.innerHeight - rect.top - 8),
+      });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+  return [ref, box] as const;
+}
+
 function TreatmentStage({
   x,
   y,
@@ -30,6 +61,7 @@ function TreatmentStage({
   status,
   fillLevel,
   fillColor,
+  s,
 }: {
   x: number;
   y: number;
@@ -39,6 +71,7 @@ function TreatmentStage({
   status: StageStatus;
   fillLevel?: number;
   fillColor?: string;
+  s: number;
 }) {
   const stageColor = STAGE_COLORS[status];
   const fill = fillLevel !== undefined ? fillLevel / 100 : 0;
@@ -51,40 +84,40 @@ function TreatmentStage({
         height={height}
         fill="#1e293b"
         stroke={stageColor}
-        strokeWidth={2}
-        cornerRadius={4}
+        strokeWidth={2 * s}
+        cornerRadius={4 * s}
       />
       {/* Fill level */}
       {fillLevel !== undefined && (
         <Rect
-          x={2}
-          y={height - fill * (height - 4)}
-          width={width - 4}
-          height={fill * (height - 4)}
+          x={2 * s}
+          y={height - fill * (height - 4 * s)}
+          width={width - 4 * s}
+          height={fill * (height - 4 * s)}
           fill={fillColor || "#3b82f6"}
           opacity={0.6}
-          cornerRadius={2}
+          cornerRadius={2 * s}
         />
       )}
       {/* Stage name */}
       <Text
         text={name}
         x={0}
-        y={-20}
+        y={-20 * s}
         width={width}
-        fontSize={10}
+        fontSize={10 * s}
         fill="#d1d5db"
         fontFamily="monospace"
         align="center"
       />
       {/* Status badge */}
-      <Group x={width / 2} y={height + 8}>
-        <Circle radius={4} fill={stageColor} />
+      <Group x={width / 2} y={height + 8 * s}>
+        <Circle radius={4 * s} fill={stageColor} />
         <Text
           text={STAGE_LABELS[status]}
-          x={8}
-          y={-5}
-          fontSize={8}
+          x={8 * s}
+          y={-5 * s}
+          fontSize={8 * s}
           fill={stageColor}
           fontFamily="monospace"
         />
@@ -99,29 +132,31 @@ function PipeConnection({
   x2,
   y2,
   active,
+  s,
 }: {
   x1: number;
   y1: number;
   x2: number;
   y2: number;
   active: boolean;
+  s: number;
 }) {
   return (
     <Group>
       <Line
         points={[x1, y1, x2, y2]}
         stroke={active ? "#3b82f6" : "#374151"}
-        strokeWidth={4}
+        strokeWidth={4 * s}
       />
       {/* Flow direction arrow */}
       {active && (
         <Group x={(x1 + x2) / 2} y={(y1 + y2) / 2}>
           <Text
             text="▶"
-            fontSize={10}
+            fontSize={10 * s}
             fill="#60a5fa"
-            x={-5}
-            y={-6}
+            x={-5 * s}
+            y={-6 * s}
           />
         </Group>
       )}
@@ -134,45 +169,62 @@ function PumpIndicator({
   y,
   name,
   active,
+  s,
 }: {
   x: number;
   y: number;
   name: string;
   active: boolean;
+  s: number;
 }) {
   return (
     <Group x={x} y={y}>
       <Circle
-        radius={12}
+        radius={12 * s}
         fill={active ? "#1e3a5f" : "#1e293b"}
         stroke={active ? "#3b82f6" : "#6b7280"}
-        strokeWidth={2}
+        strokeWidth={2 * s}
       />
       <Text
         text={active ? "▶" : "■"}
-        fontSize={10}
+        fontSize={10 * s}
         fill={active ? "#60a5fa" : "#6b7280"}
-        x={-4}
-        y={-5}
+        x={-4 * s}
+        y={-5 * s}
       />
       <Text
         text={name}
-        fontSize={9}
+        fontSize={9 * s}
         fill={active ? "#93c5fd" : "#6b7280"}
         fontFamily="monospace"
-        x={-20}
-        y={18}
-        width={40}
+        x={-20 * s}
+        y={18 * s}
+        width={40 * s}
         align="center"
       />
     </Group>
   );
 }
 
-export function TreatmentView({ plant }: TreatmentViewProps) {
-  const WIDTH = 900;
-  const HEIGHT = 550;
+// Native design space — authored here, then mapped onto the live canvas.
+// Positions fill the full area (X/Y); circles, gauges and text scale
+// uniformly (S) so nothing ever looks stretched.
+const DW = 900;
+const DH = 550;
 
+export function TreatmentView({ plant }: TreatmentViewProps) {
+  const [wrapRef, box] = useContainerBox<HTMLDivElement>();
+  const W = box.w || DW;
+  const H = box.h || DH;
+
+  const sx = W / DW;
+  const sy = H / DH;
+  const k = Math.min(sx, sy);
+  const X = (v: number) => v * sx; // horizontal position / length
+  const Y = (v: number) => v * sy; // vertical position / length
+  const S = (v: number) => v * k;  // uniform size (radius, font, stroke)
+
+  // Layout (design space)
   const stageY = 180;
   const stageW = 90;
   const stageH = 120;
@@ -203,31 +255,31 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
   const anyAlarm = plant.chemical_alarm || plant.pressure_alarm || plant.turbidity_alarm;
 
   return (
-    <div className="relative">
-      <Stage width={WIDTH} height={HEIGHT}>
+    <div ref={wrapRef} className="w-full">
+      <Stage width={W} height={H}>
         <Layer>
           {/* Background */}
           <Rect
-            width={WIDTH}
-            height={HEIGHT}
+            width={W}
+            height={H}
             fill={anyAlarm ? "#1a0a05" : "#0f172a"}
           />
 
           {/* Title */}
           <Text
             text="WATER TREATMENT PLANT"
-            x={20}
-            y={15}
-            fontSize={18}
+            x={X(20)}
+            y={Y(15)}
+            fontSize={S(18)}
             fill="#e2e8f0"
             fontFamily="monospace"
             fontStyle="bold"
           />
           <Text
             text={anyAlarm ? "! ALARM ACTIVE !" : "NORMAL OPERATION"}
-            x={20}
-            y={38}
-            fontSize={13}
+            x={X(20)}
+            y={Y(38)}
+            fontSize={S(13)}
             fill={anyAlarm ? "#ef4444" : "#22c55e"}
             fontFamily="monospace"
           />
@@ -235,17 +287,17 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
           {/* ← From Dam label */}
           <Text
             text="← From Dam"
-            x={startX}
-            y={stageY - 40}
-            fontSize={11}
+            x={X(startX)}
+            y={Y(stageY - 40)}
+            fontSize={S(11)}
             fill="#60a5fa"
             fontFamily="monospace"
           />
 
           {/* Treatment stages */}
           {stageNames.map((name, i) => {
-            const x = startX + i * (stageW + stageGap);
-            const status = (plant.stages[stageKeys[i]] || 1) as StageStatus;
+            const x = X(startX + i * (stageW + stageGap));
+            const status = (plant.stages[stageKeys[i]] ?? 1) as StageStatus;
             let fillLevel: number | undefined;
             let fillColor: string | undefined;
 
@@ -259,7 +311,11 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
               fillLevel = plant.tank_level;
               fillColor = "#3b82f6";
             } else {
-              fillLevel = 50 + Math.random() * 10;
+              // Coag / sed / filt basins: animated only while water is actually
+              // flowing in (intake_rate > 0). Go static when the plant is starved,
+              // whether from the intake pump being off OR the dam sluice gate
+              // being closed (dam outflow = 0 => intake_rate = 0).
+              fillLevel = plant.intake_rate > 0 ? 50 + Math.random() * 10 : 55;
               fillColor = "#3b82f6";
             }
 
@@ -267,29 +323,31 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
               <TreatmentStage
                 key={name}
                 x={x}
-                y={stageY}
-                width={stageW}
-                height={stageH}
+                y={Y(stageY)}
+                width={X(stageW)}
+                height={Y(stageH)}
                 name={name}
                 status={status}
                 fillLevel={fillLevel}
                 fillColor={fillColor}
+                s={k}
               />
             );
           })}
 
           {/* Pipe connections between stages */}
           {stageNames.slice(0, -1).map((_, i) => {
-            const x1 = startX + i * (stageW + stageGap) + stageW;
-            const x2 = startX + (i + 1) * (stageW + stageGap);
+            const x1 = X(startX + i * (stageW + stageGap) + stageW);
+            const x2 = X(startX + (i + 1) * (stageW + stageGap));
             return (
               <PipeConnection
                 key={`pipe-${i}`}
                 x1={x1}
-                y1={stageY + stageH / 2}
+                y1={Y(stageY + stageH / 2)}
                 x2={x2}
-                y2={stageY + stageH / 2}
+                y2={Y(stageY + stageH / 2)}
                 active={(plant.stages[stageKeys[i]] as StageStatus) >= 1}
+                s={k}
               />
             );
           })}
@@ -297,38 +355,41 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
           {/* → To City label */}
           <Text
             text="To City →"
-            x={startX + 5 * (stageW + stageGap) + stageW + 10}
-            y={stageY + stageH / 2 - 6}
-            fontSize={11}
+            x={X(startX + 5 * (stageW + stageGap) + stageW + 10)}
+            y={Y(stageY + stageH / 2 - 6)}
+            fontSize={S(11)}
             fill="#22c55e"
             fontFamily="monospace"
           />
 
           {/* Pump indicators */}
           <PumpIndicator
-            x={startX + stageW / 2}
-            y={stageY + stageH + 45}
+            x={X(startX + stageW / 2)}
+            y={Y(stageY + stageH + 45)}
             name="INTAKE"
             active={plant.intake_pump}
+            s={k}
           />
           <PumpIndicator
-            x={startX + 4 * (stageW + stageGap) + stageW / 2}
-            y={stageY + stageH + 45}
+            x={X(startX + 4 * (stageW + stageGap) + stageW / 2)}
+            y={Y(stageY + stageH + 45)}
             name="CHEM"
             active={plant.chemical_pump}
+            s={k}
           />
           <PumpIndicator
-            x={startX + 5 * (stageW + stageGap) + stageW / 2}
-            y={stageY + stageH + 45}
+            x={X(startX + 5 * (stageW + stageGap) + stageW / 2)}
+            y={Y(stageY + stageH + 45)}
             name="DIST"
             active={plant.distribution_pump}
+            s={k}
           />
 
           {/* ── Gauges ── */}
           <Gauge
-            x={100}
-            y={440}
-            radius={45}
+            x={X(100)}
+            y={Y(440)}
+            radius={S(45)}
             value={plant.chlorine_level}
             min={0}
             max={15}
@@ -338,9 +399,9 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
             dangerLow={0.5}
           />
           <Gauge
-            x={230}
-            y={440}
-            radius={45}
+            x={X(230)}
+            y={Y(440)}
+            radius={S(45)}
             value={plant.ph_level}
             min={0}
             max={14}
@@ -350,9 +411,9 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
             dangerLow={6.5}
           />
           <Gauge
-            x={360}
-            y={440}
-            radius={45}
+            x={X(360)}
+            y={Y(440)}
+            radius={S(45)}
             value={plant.turbidity}
             min={0}
             max={10}
@@ -361,9 +422,9 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
             dangerHigh={5}
           />
           <Gauge
-            x={490}
-            y={440}
-            radius={45}
+            x={X(490)}
+            y={Y(440)}
+            radius={S(45)}
             value={plant.tank_level}
             min={0}
             max={100}
@@ -373,9 +434,9 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
             dangerLow={10}
           />
           <Gauge
-            x={620}
-            y={440}
-            radius={45}
+            x={X(620)}
+            y={Y(440)}
+            radius={S(45)}
             value={plant.distribution_pressure}
             min={0}
             max={100}
@@ -385,44 +446,47 @@ export function TreatmentView({ plant }: TreatmentViewProps) {
             dangerLow={40}
           />
 
-          {/* ── Alarms ── */}
-          <Group x={740} y={370}>
-            <Text
-              text="ALARMS"
-              fontSize={12}
-              fill="#9ca3af"
-              fontFamily="monospace"
-              fontStyle="bold"
-            />
-            <StatusLight
-              x={0}
-              y={25}
-              active={plant.chemical_alarm}
-              label="CHEMICAL"
-              color="#ef4444"
-            />
-            <StatusLight
-              x={0}
-              y={50}
-              active={plant.pressure_alarm}
-              label="PRESSURE"
-              color="#f59e0b"
-            />
-            <StatusLight
-              x={0}
-              y={75}
-              active={plant.turbidity_alarm}
-              label="TURBIDITY"
-              color="#f97316"
-            />
-          </Group>
+          {/* ── Alarms (top right) ── */}
+          <Text
+            text="ALARMS"
+            x={X(740)}
+            y={Y(20)}
+            fontSize={S(12)}
+            fill="#9ca3af"
+            fontFamily="monospace"
+            fontStyle="bold"
+          />
+          <StatusLight
+            x={X(740)}
+            y={Y(45)}
+            size={S(10)}
+            active={plant.chemical_alarm}
+            label="CHEMICAL"
+            color="#ef4444"
+          />
+          <StatusLight
+            x={X(740)}
+            y={Y(70)}
+            size={S(10)}
+            active={plant.pressure_alarm}
+            label="PRESSURE"
+            color="#f59e0b"
+          />
+          <StatusLight
+            x={X(740)}
+            y={Y(95)}
+            size={S(10)}
+            active={plant.turbidity_alarm}
+            label="TURBIDITY"
+            color="#f97316"
+          />
 
           {/* Chemical dosing info */}
           <Text
             text={`Dosing Rate: ${plant.chlorine_dosing_rate.toFixed(1)} ppm`}
-            x={startX + 4 * (stageW + stageGap)}
-            y={stageY - 40}
-            fontSize={11}
+            x={X(startX + 4 * (stageW + stageGap))}
+            y={Y(stageY - 40)}
+            fontSize={S(11)}
             fill={plant.chlorine_level > 8 ? "#ef4444" : "#93c5fd"}
             fontFamily="monospace"
           />
