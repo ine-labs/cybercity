@@ -78,6 +78,21 @@ class TrafficIntersectionSimulation:
         else:  # ALL_RED phases
             return self.ALL_RED_TIME
 
+    def _conflict_demand(self) -> bool:
+        """
+        True when the current commands demand opposing greens: phase hold wants
+        one direction while preemption forces the other. Evaluated from the
+        commands, NOT the displayed lights, so flash mode (which forces red)
+        cannot erase the trigger and cause oscillation.
+        """
+        if self.preemption_active > 0 and self.phase_hold > 0:
+            hold_wants_ns = self.phase_hold in (self.PHASE_NS_GREEN, self.PHASE_NS_YELLOW)
+            hold_wants_ew = self.phase_hold in (self.PHASE_EW_GREEN, self.PHASE_EW_YELLOW)
+            preempt_wants_ew = self.preemption_active == 2
+            preempt_wants_ns = self.preemption_active == 1
+            return (hold_wants_ns and preempt_wants_ew) or (hold_wants_ew and preempt_wants_ns)
+        return False
+
     def _update_lights(self):
         """Set light and pedestrian states based on current phase."""
         if self.flash_mode:
@@ -88,20 +103,15 @@ class TrafficIntersectionSimulation:
             self.ew_pedestrian = "stop"
             return
 
-        # Check for conflicting demands: phase hold wants one direction,
-        # preemption wants the opposite → both get green (dangerous!)
-        if self.preemption_active > 0 and self.phase_hold > 0:
-            hold_wants_ns = self.phase_hold in (self.PHASE_NS_GREEN, self.PHASE_NS_YELLOW)
-            hold_wants_ew = self.phase_hold in (self.PHASE_EW_GREEN, self.PHASE_EW_YELLOW)
-            preempt_wants_ew = self.preemption_active == 2
-            preempt_wants_ns = self.preemption_active == 1
-            if (hold_wants_ns and preempt_wants_ew) or (hold_wants_ew and preempt_wants_ns):
-                # Conflicting commands → both directions get green
-                self.ns_light = "green"
-                self.ew_light = "green"
-                self.ns_pedestrian = "walk"
-                self.ew_pedestrian = "walk"
-                return
+        # Conflicting commands (phase hold vs preemption) → both directions get
+        # green. Only reached when flash mode is OFF (monitor disabled), so this
+        # is the actual dangerous COLLISION RISK display.
+        if self._conflict_demand():
+            self.ns_light = "green"
+            self.ew_light = "green"
+            self.ns_pedestrian = "walk"
+            self.ew_pedestrian = "walk"
+            return
 
         if self.preemption_active == 1:
             self.ns_light = "green"
@@ -151,20 +161,22 @@ class TrafficIntersectionSimulation:
     def tick(self, dt: float = 0.5):
         """Advance intersection simulation by dt seconds."""
         # --- Conflict detection ---
-        # Check if attacker forced both directions green
-        if self.ns_light == "green" and self.ew_light == "green":
+        # Evaluate from the underlying commands, not the displayed lights: flash
+        # mode forces the lights to red, so keying off light colour would clear
+        # the trigger every other tick and oscillate. The demand persists while
+        # the conflicting phase-hold + preemption commands remain set.
+        if self._conflict_demand():
             if self.conflict_monitor_enabled:
+                # Safety catches it → stable all-red flash (safe failure)
                 self.flash_mode = True
                 self.conflict_detected = False
             else:
+                # Monitor disabled → opposing greens actually displayed
                 self.conflict_detected = True
                 self.flash_mode = False
         else:
+            self.flash_mode = False
             self.conflict_detected = False
-            # Only clear flash mode if conflict monitor caught it
-            # Flash mode persists until conflict condition is removed
-            if self.flash_mode and not (self.ns_light == "green" and self.ew_light == "green"):
-                self.flash_mode = False
 
         # --- Phase cycling ---
         if not self.flash_mode and self.preemption_active == 0:
@@ -203,6 +215,18 @@ class TrafficIntersectionSimulation:
             cleared = min(self.ew_queue, max(1, int(2.0 * dt + random.gauss(0, 0.3))))
             self.ew_queue -= cleared
             self.total_vehicles_passed += cleared
+
+        # --- All-way stop (flash mode): reduced-capacity, take-turns clearing ---
+        # A flashing-red intersection is an all-way stop: it still moves traffic,
+        # one car at a time per approach, but at far lower capacity than a green
+        # phase (~0.5 cars/s each vs ~2). Under signal-level demand it congests,
+        # but it never fully freezes.
+        if self.flash_mode:
+            for d in ("ns", "ew"):
+                q = getattr(self, f"{d}_queue")
+                if q > 0 and random.random() < 0.5 * dt:
+                    setattr(self, f"{d}_queue", q - 1)
+                    self.total_vehicles_passed += 1
 
         # --- Wait time tracking ---
         # Track how long each direction has been continuously red
