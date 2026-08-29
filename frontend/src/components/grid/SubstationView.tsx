@@ -1,6 +1,6 @@
 /**
  * SubstationView v2 — Animated Single-Line Diagram (SLD)
- * Northgate 230/115kV Regional Substation
+ * Copperline 230/115kV Regional Substation
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -27,7 +27,38 @@ const C = {
 };
 
 // ── Canvas & layout constants ─────────────────────────────────────────────
-const W = 720, H = 650;
+const W = 720, H = 650, PANEL_W = 200;
+
+/**
+ * Measure the container so the scene fills the remaining viewport: full
+ * width, and height locked to the remaining space below it (so it never
+ * scrolls) — same technique used by DamView / IntersectionView.
+ */
+function useContainerBox<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      if (el.clientWidth === 0) return; // hidden tab — skip
+      setBox({
+        w: el.clientWidth,
+        h: Math.max(320, window.innerHeight - rect.top - 8),
+      });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+  return [ref, box] as const;
+}
 
 const HV_Y    = 135;  // 230kV bus center-y
 const LV_Y    = 325;  // 115kV bus center-y
@@ -197,6 +228,13 @@ function Row({ label, value, unit, col }: {
 
 // ── Main component ────────────────────────────────────────────────────────
 export function SubstationView({ grid }: Props) {
+  const [wrapRef, box] = useContainerBox<HTMLDivElement>();
+  const availW = Math.max(360, (box.w || W + PANEL_W) - PANEL_W);
+  const availH = box.h || H;
+  const scale  = Math.min(availW / W, availH / H);
+  const stageW = Math.round(W * scale);
+  const stageH = Math.round(H * scale);
+
   const cb = grid.cb_states ?? Array(7).fill(true);
 
   // Topology liveness
@@ -245,11 +283,12 @@ export function SubstationView({ grid }: Props) {
   const TX_CONN_BOT = TX_Y + 2 * TX_R + 2;   // 240 + 32 = 272
 
   return (
-    <div className="flex bg-gray-950 rounded-lg overflow-hidden">
+    <div ref={wrapRef} className="flex justify-center w-full bg-gray-950 rounded-lg overflow-hidden">
 
       {/* ── Konva SLD canvas ──────────────────────────────────────── */}
-      <Stage width={W} height={H}>
+      <Stage width={stageW} height={stageH}>
         <Layer>
+        <Group scaleX={scale} scaleY={scale}>
 
           {/* Background */}
           <Rect x={0} y={0} width={W} height={H} fill={C.bg} />
@@ -271,7 +310,7 @@ export function SubstationView({ grid }: Props) {
           {/* Title bar */}
           <Rect x={0} y={0} width={W} height={22} fill="#050c1a" />
           <Text x={0} y={6} width={W}
-            text="NORTHGATE REGIONAL SUBSTATION  —  230 / 115 kV"
+            text="COPPERLINE REGIONAL SUBSTATION  —  230 / 115 kV"
             fontSize={10} fontFamily="monospace" fontStyle="bold"
             fill="#2d4a6e" align="center"
           />
@@ -477,15 +516,16 @@ export function SubstationView({ grid }: Props) {
             </>
           )}
 
+        </Group>
         </Layer>
       </Stage>
 
       {/* ── Right measurement panel ───────────────────────────────────── */}
-      <div className="w-[200px] bg-gray-900 border-l border-gray-800 p-3 flex flex-col gap-2.5 text-xs font-mono overflow-y-auto" style={{ minHeight: H }}>
+      <div className="bg-gray-900 border-l border-gray-800 p-3 flex flex-col gap-2.5 text-xs font-mono overflow-y-auto flex-shrink-0" style={{ width: PANEL_W, minHeight: stageH }}>
 
         {/* Status header */}
         <div className="text-center border-b border-gray-700 pb-2">
-          <div className="text-gray-500 text-[9px] uppercase tracking-widest">Northgate IED · Unit 1</div>
+          <div className="text-gray-500 text-[9px] uppercase tracking-widest">Copperline IED · Unit 1</div>
           <div className={`text-base font-bold mt-1 ${
             grid.blackout        ? "text-red-500 animate-pulse" :
             grid.grid_stress > 60 ? "text-amber-400" : "text-green-400"

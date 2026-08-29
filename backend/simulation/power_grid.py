@@ -1,5 +1,5 @@
 """
-Power Grid Substation Simulation — Northgate 230/115kV Regional Substation
+Power Grid Substation Simulation — Copperline 230/115kV Regional Substation
 
 Topology:
   Source1 (Gen)  ─── CB1 ──┐
@@ -146,7 +146,7 @@ class PowerGridSimulation:
             self.events = self.events[-20:]
         log.info(f"[GRID] {msg}")
 
-    # ── Circuit breaker control (called by IEC 61850 server) ──────────
+    # ── Circuit breaker control (called by IEC 104 outstation) ────────
     def trip_cb(self, idx: int, reason: str = "remote") -> bool:
         """Open circuit breaker idx (0-indexed). Returns True if state changed."""
         if 0 <= idx < self.NUM_CBS and self.cb_closed[idx]:

@@ -1,7 +1,7 @@
 """
 CyberCity ICS — Main Application
 FastAPI server with Socket.IO for real-time communication.
-Orchestrates all scenario simulations, Modbus server, SNMP agent, and IEC 61850 server.
+Orchestrates all scenario simulations, Modbus server, SNMP agent, and IEC 104 outstation.
 """
 
 import asyncio
@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from simulation.process_engine import ProcessEngine
 from modbus_server.server import ModbusPLCServer
 from snmp_server.agent import SNMPTrafficController
-from iec61850_server.server import IEC61850Server
+from iec104_server.server import IEC104OutstationServer
 from dnp3_server.server import DNP3OutstationServer
 from operator_hmi import OperatorHMI
 
@@ -54,7 +54,7 @@ app = socketio.ASGIApp(sio, other_asgi_app=api)
 engine        = ProcessEngine()
 modbus_server = ModbusPLCServer(host="0.0.0.0", port=5020)
 snmp_server   = SNMPTrafficController(host="0.0.0.0", port=5021)
-iec61850      = IEC61850Server(host="0.0.0.0", port=5022)
+iec104        = IEC104OutstationServer(host="0.0.0.0", port=5022)
 dnp3_server   = DNP3OutstationServer(host="0.0.0.0", port=5023)
 
 # Simulated plant operator HMI — continuously polls the Modbus PLC so the
@@ -134,22 +134,22 @@ async def manual_control(sid, data):
         engine.grid.close_cb(idx, reason="operator-HMI")
     elif command == "grid_toggle_protection":
         engine.grid.protection_enabled = not engine.grid.protection_enabled
-        iec61850._values["PROT1.Beh.stVal"] = engine.grid.protection_enabled
+        iec104._values["PROT1"] = engine.grid.protection_enabled
     elif command == "grid_toggle_diff_prot":
         engine.grid.diff_prot_enabled = not engine.grid.diff_prot_enabled
-        iec61850._values["DFPT1.Beh.stVal"] = engine.grid.diff_prot_enabled
+        iec104._values["DFPT1"] = engine.grid.diff_prot_enabled
     elif command == "grid_toggle_overcurrent":
         engine.grid.overcurrent_enabled = not engine.grid.overcurrent_enabled
-        iec61850._values["OCPT1.Beh.stVal"] = engine.grid.overcurrent_enabled
+        iec104._values["OCPT1"] = engine.grid.overcurrent_enabled
     elif command == "grid_toggle_underfreq":
         engine.grid.underfreq_enabled = not engine.grid.underfreq_enabled
-        iec61850._values["UFPT1.Beh.stVal"] = engine.grid.underfreq_enabled
+        iec104._values["UFPT1"] = engine.grid.underfreq_enabled
     elif command == "grid_toggle_autorecloser":
         engine.grid.autorecloser_enabled = not engine.grid.autorecloser_enabled
-        iec61850._values["RREC1.Beh.stVal"] = engine.grid.autorecloser_enabled
+        iec104._values["RREC1"] = engine.grid.autorecloser_enabled
     elif command == "grid_reset":
         engine.grid.reset()
-        iec61850.reset()
+        iec104.reset()
 
     # ─── Pipeline Compressor Station scenario ─────────────────────────
     elif command == "pipeline_set_rpm":
@@ -187,7 +187,7 @@ async def get_status():
         "actual":       engine.get_actual_state(),
         "modbus_port":  modbus_server.port,
         "snmp_port":    snmp_server.port,
-        "iec61850_port": iec61850.port,
+        "iec104_port":  iec104.port,
         "dnp3_port":    dnp3_server.port,
     }
 
@@ -197,7 +197,7 @@ async def reset_simulation():
     engine.reset()
     modbus_server._set_initial_values()
     snmp_server.reset()
-    iec61850.reset()
+    iec104.reset()
     dnp3_server.reset()
     logger.info("All simulations reset to safe defaults")
     return {"status": "reset", "message": "All systems returned to normal"}
@@ -226,29 +226,29 @@ async def pre_tick_sync():
     engine.traffic.preemption_active      = traffic_writes["preemption_active"]
     engine.traffic.conflict_monitor_enabled = bool(traffic_writes["conflict_monitor_enabled"])
 
-    # ─── Power Grid scenario (IEC 61850 MMS) ─────────────────────────
-    grid_writes = iec61850.read_attacker_writes()
-    for ref, value in grid_writes.items():
-        # CB controls
-        if ".Pos.Oper.ctlVal" in ref:
+    # ─── Power Grid scenario (IEC 60870-5-104) ───────────────────────
+    grid_writes = iec104.read_attacker_writes()
+    for name, value in grid_writes.items():
+        # CB controls — C_SC_NA_1 direct command: true=close, false=trip
+        if name.startswith("XCBR"):
             try:
-                cb_idx = int(ref[4]) - 1   # "XCBR3.Pos..." → index 2
+                cb_idx = int(name[4:]) - 1   # "XCBR3" → index 2
                 if value:
-                    engine.grid.close_cb(cb_idx, reason="IEC61850-MMS")
+                    engine.grid.close_cb(cb_idx, reason="IEC104")
                 else:
-                    engine.grid.trip_cb(cb_idx, reason="IEC61850-MMS")
+                    engine.grid.trip_cb(cb_idx, reason="IEC104")
             except (IndexError, ValueError):
                 pass
         # Protection relay enables
-        elif ref == "PROT1.Beh.stVal":
+        elif name == "PROT1":
             engine.grid.protection_enabled = bool(value)
-        elif ref == "DFPT1.Beh.stVal":
+        elif name == "DFPT1":
             engine.grid.diff_prot_enabled = bool(value)
-        elif ref == "OCPT1.Beh.stVal":
+        elif name == "OCPT1":
             engine.grid.overcurrent_enabled = bool(value)
-        elif ref == "UFPT1.Beh.stVal":
+        elif name == "UFPT1":
             engine.grid.underfreq_enabled = bool(value)
-        elif ref == "RREC1.Beh.stVal":
+        elif name == "RREC1":
             engine.grid.autorecloser_enabled = bool(value)
 
     # ─── Pipeline Compressor Station (DNP3 Direct Operate writes) ───────
@@ -281,8 +281,8 @@ async def post_tick_sync(displayed_state: dict, actual_state: dict):
     # Sync traffic → SNMP
     snmp_server.update_from_simulation(actual_state["traffic"])
 
-    # Sync grid → IEC 61850 MMS store
-    iec61850.update_from_simulation(actual_state["grid"])
+    # Sync grid → IEC 60870-5-104 outstation
+    iec104.update_from_simulation(actual_state["grid"])
 
     # Sync pipeline → DNP3 outstation
     dnp3_server.update_from_simulation(actual_state["pipeline"])
@@ -307,8 +307,8 @@ async def startup():
     asyncio.create_task(snmp_server.start())
     logger.info(f"SNMP agent starting on UDP port {snmp_server.port}")
 
-    asyncio.create_task(iec61850.start())
-    logger.info(f"IEC 61850 MMS server starting on TCP port {iec61850.port}")
+    asyncio.create_task(iec104.start())
+    logger.info(f"IEC 60870-5-104 outstation starting on TCP port {iec104.port}")
 
     asyncio.create_task(dnp3_server.start())
     logger.info(f"DNP3 outstation starting on TCP port {dnp3_server.port}")
