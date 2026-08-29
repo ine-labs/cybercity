@@ -124,7 +124,7 @@ function CB({ x, y, closed, id }: { x: number; y: number; closed: boolean; id: s
         <Line points={[x, y - 5, x, y + 5]} stroke={col} strokeWidth={2.5} />
       )}
       {/* Label to the right — avoids vertical line overlap */}
-      <Text x={x + S + 3} y={y - 5} text={id} fontSize={8.5} fontFamily="monospace" fill={col} />
+      <Text x={x + S + 3} y={y - 5} text={id} fontSize={11} fontFamily="monospace" fill={col} />
     </Group>
   );
 }
@@ -159,11 +159,11 @@ function Transformer({ x, y, loadPct, temp, tripped, id }: {
         fill={tripped ? "rgba(239,68,68,0.05)" : "rgba(96,165,250,0.06)"}
       />
       {/* Labels — all to the right, stacked vertically */}
-      <Text x={tx} y={y - 22} text={id}              fontSize={11} fontFamily="monospace" fontStyle="bold" fill={bc} />
-      <Text x={tx} y={y -  7} text={`${loadPct.toFixed(0)}%`} fontSize={10} fontFamily="monospace" fill={lc} />
-      <Text x={tx} y={y +  7} text={`${temp.toFixed(0)}°C`}   fontSize={9}  fontFamily="monospace" fill={tc} />
+      <Text x={tx} y={y - 22} text={id}              fontSize={14} fontFamily="monospace" fontStyle="bold" fill={bc} />
+      <Text x={tx} y={y -  7} text={`${loadPct.toFixed(0)}%`} fontSize={13} fontFamily="monospace" fill={lc} />
+      <Text x={tx} y={y +  7} text={`${temp.toFixed(0)}°C`}   fontSize={12}  fontFamily="monospace" fill={tc} />
       {tripped && (
-        <Text x={tx} y={y + 20} text="TRIPPED" fontSize={8} fontFamily="monospace" fontStyle="bold" fill={C.tripped} />
+        <Text x={tx} y={y + 20} text="TRIPPED" fontSize={11} fontFamily="monospace" fontStyle="bold" fill={C.tripped} />
       )}
     </Group>
   );
@@ -183,12 +183,12 @@ function LoadBox({ x, y, live, name, zone, mw }: {
         stroke={col} strokeWidth={1.2} cornerRadius={4}
       />
       <Text x={x - BW / 2 + 4} y={y +  6} text={name}
-        fontSize={8.5} fontFamily="monospace" fontStyle="bold"
+        fontSize={11} fontFamily="monospace" fontStyle="bold"
         fill={col} width={BW - 8} align="center" />
       <Text x={x - BW / 2 + 4} y={y + 19} text={zone}
-        fontSize={7} fontFamily="monospace" fill={C.textDim} width={BW - 8} align="center" />
+        fontSize={10} fontFamily="monospace" fill={C.textDim} width={BW - 8} align="center" />
       <Text x={x - BW / 2 + 4} y={y + 31} text={`${mw} MW`}
-        fontSize={8} fontFamily="monospace"
+        fontSize={11} fontFamily="monospace"
         fill={live ? C.textBright : C.textDim} width={BW - 8} align="center" />
     </Group>
   );
@@ -311,15 +311,15 @@ export function SubstationView({ grid }: Props) {
           <Rect x={0} y={0} width={W} height={22} fill="#050c1a" />
           <Text x={0} y={6} width={W}
             text="COPPERLINE REGIONAL SUBSTATION  —  230 / 115 kV"
-            fontSize={10} fontFamily="monospace" fontStyle="bold"
+            fontSize={13} fontFamily="monospace" fontStyle="bold"
             fill="#2d4a6e" align="center"
           />
 
           {/* ── SOURCE 1 (top-left) ──────────────────────────────── */}
-          <Text x={SRC1_X - 38} y={25} text="◈ SOURCE 1" fontSize={8}
-            fontFamily="monospace" fontStyle="bold" fill={s1col} width={76} align="center" />
-          <Text x={SRC1_X - 38} y={36} text="GEN · 165 MW" fontSize={7}
-            fontFamily="monospace" fill={C.textDim} width={76} align="center" />
+          <Text x={SRC1_X - 50} y={25} text="◈ SOURCE 1" fontSize={11}
+            fontFamily="monospace" fontStyle="bold" fill={s1col} width={100} align="center" />
+          <Text x={SRC1_X - 50} y={37} text="GEN · 165 MW" fontSize={10}
+            fontFamily="monospace" fill={C.textDim} width={100} align="center" />
           <Line points={[SRC1_X, SRC_TOP, SRC1_X, CB12_Y - 11]}
             stroke={s1col} strokeWidth={2} />
           <CB x={SRC1_X} y={CB12_Y} closed={!!cb[0]} id="CB1" />
@@ -327,10 +327,10 @@ export function SubstationView({ grid }: Props) {
             stroke={s1col} strokeWidth={2} />
 
           {/* ── SOURCE 2 (top-right) ─────────────────────────────── */}
-          <Text x={SRC2_X - 38} y={25} text="◈ SOURCE 2" fontSize={8}
-            fontFamily="monospace" fontStyle="bold" fill={s2col} width={76} align="center" />
-          <Text x={SRC2_X - 38} y={36} text="GRID · 135 MW" fontSize={7}
-            fontFamily="monospace" fill={C.textDim} width={76} align="center" />
+          <Text x={SRC2_X - 50} y={25} text="◈ SOURCE 2" fontSize={11}
+            fontFamily="monospace" fontStyle="bold" fill={s2col} width={100} align="center" />
+          <Text x={SRC2_X - 50} y={37} text="GRID · 135 MW" fontSize={10}
+            fontFamily="monospace" fill={C.textDim} width={100} align="center" />
           <Line points={[SRC2_X, SRC_TOP, SRC2_X, CB12_Y - 11]}
             stroke={s2col} strokeWidth={2} />
           <CB x={SRC2_X} y={CB12_Y} closed={!!cb[1]} id="CB2" />
@@ -346,9 +346,9 @@ export function SubstationView({ grid }: Props) {
           <Rect x={BUS_L} y={HV_Y - 4} width={BUS_R - BUS_L} height={8}
             fill={hvCol} cornerRadius={3}
           />
-          <Text x={14} y={HV_Y - 7} text="230kV" fontSize={9}
+          <Text x={14} y={HV_Y - 7} text="230kV" fontSize={12}
             fontFamily="monospace" fontStyle="bold" fill={hvCol} />
-          <Text x={14} y={HV_Y + 4} text="HV BUS" fontSize={7}
+          <Text x={14} y={HV_Y + 4} text="HV BUS" fontSize={10}
             fontFamily="monospace" fill={C.textDim} />
           {/* Tap nodes */}
           {[SRC1_X, TX1_X, TX2_X, SRC2_X].map(x => (
@@ -392,9 +392,9 @@ export function SubstationView({ grid }: Props) {
           <Rect x={BUS_L} y={LV_Y - 3} width={BUS_R - BUS_L} height={6}
             fill={lvCol} cornerRadius={2}
           />
-          <Text x={14} y={LV_Y - 5} text="115kV" fontSize={9}
+          <Text x={14} y={LV_Y - 5} text="115kV" fontSize={12}
             fontFamily="monospace" fontStyle="bold" fill={lvCol} />
-          <Text x={14} y={LV_Y + 4} text="LV BUS" fontSize={7}
+          <Text x={14} y={LV_Y + 4} text="LV BUS" fontSize={10}
             fontFamily="monospace" fill={C.textDim} />
           {/* Tap nodes */}
           {[TX1_X, TX2_X, FA_X, FB_X, FC_X].map(x => (
@@ -442,26 +442,26 @@ export function SubstationView({ grid }: Props) {
           <Line points={[0, INFO_Y, W, INFO_Y]} stroke="#1e3a5f" strokeWidth={1} />
 
           {/* Left column — Frequency */}
-          <Text x={20} y={INFO_Y + 6}  text="SYSTEM FREQUENCY" fontSize={8} fontFamily="monospace" fill={C.textDim} />
+          <Text x={20} y={INFO_Y + 6}  text="SYSTEM FREQUENCY" fontSize={11} fontFamily="monospace" fill={C.textDim} />
           <Text x={18} y={INFO_Y + 20} text={grid.frequency.toFixed(3)}
             fontSize={30} fontFamily="monospace" fontStyle="bold" fill={fCol} />
           <Text x={20} y={INFO_Y + 55} text="Hz  ·  NOMINAL: 60.000"
-            fontSize={8} fontFamily="monospace" fill={C.textDim} />
+            fontSize={11} fontFamily="monospace" fill={C.textDim} />
           <Text x={20} y={INFO_Y + 68}
             text={grid.frequency < 59.9 ? "▼ UNDER-FREQUENCY DEVIATION" : "● FREQUENCY STABLE"}
-            fontSize={7.5} fontFamily="monospace" fill={fCol} />
+            fontSize={10} fontFamily="monospace" fill={fCol} />
 
           {/* Center column — Grid stress + Active power */}
-          <Text x={210} y={INFO_Y + 6} text="GRID STRESS" fontSize={8} fontFamily="monospace" fill={C.textDim} />
+          <Text x={210} y={INFO_Y + 6} text="GRID STRESS" fontSize={11} fontFamily="monospace" fill={C.textDim} />
           <Rect x={210} y={INFO_Y + 20} width={200} height={11} fill="#1f2937" cornerRadius={5} />
           <Rect x={210} y={INFO_Y + 20}
             width={Math.max(0, Math.min(200, (grid.grid_stress / 100) * 200))} height={11}
             fill={sCol} cornerRadius={5}
           />
           <Text x={418} y={INFO_Y + 18} text={`${grid.grid_stress.toFixed(0)}%`}
-            fontSize={9} fontFamily="monospace" fill={C.textBright} />
+            fontSize={12} fontFamily="monospace" fill={C.textBright} />
 
-          <Text x={210} y={INFO_Y + 42} text="ACTIVE POWER" fontSize={8} fontFamily="monospace" fill={C.textDim} />
+          <Text x={210} y={INFO_Y + 42} text="ACTIVE POWER" fontSize={11} fontFamily="monospace" fill={C.textDim} />
           <Text x={210} y={INFO_Y + 54}
             text={`${grid.active_power.toFixed(0)} MW`}
             fontSize={16} fontFamily="monospace" fontStyle="bold"
@@ -469,7 +469,7 @@ export function SubstationView({ grid }: Props) {
           />
           <Text x={210} y={INFO_Y + 76}
             text={`PF: ${grid.power_factor.toFixed(3)}   Q: ${grid.reactive_power.toFixed(0)} MVAR`}
-            fontSize={7.5} fontFamily="monospace" fill={C.textDim}
+            fontSize={10} fontFamily="monospace" fill={C.textDim}
           />
 
           {/* Right column — Event log */}
@@ -477,10 +477,10 @@ export function SubstationView({ grid }: Props) {
             fill="#040c1a" stroke="#1a3352" strokeWidth={0.5} cornerRadius={3}
           />
           <Text x={460} y={INFO_Y + 8} text="▸ SCADA EVENT LOG"
-            fontSize={8} fontFamily="monospace" fontStyle="bold" fill="#3b82f6" />
+            fontSize={11} fontFamily="monospace" fontStyle="bold" fill="#3b82f6" />
           {(grid.events ?? []).slice(-6).map((ev, i) => (
             <Text key={i} x={460} y={INFO_Y + 24 + i * 12} text={ev}
-              fontSize={7} fontFamily="monospace"
+              fontSize={10} fontFamily="monospace"
               fill={
                 ev.includes("BLACKOUT") || ev.includes("TRIP") ? C.tripped :
                 ev.includes("CLOSE")    || ev.includes("RECOVERY") ? C.energized :
@@ -508,7 +508,7 @@ export function SubstationView({ grid }: Props) {
                   />
                   <Text x={0} y={312} width={W}
                     text="190 MW — ALL FEEDER ZONES DARK"
-                    fontSize={13} fontFamily="monospace"
+                    fontSize={15} fontFamily="monospace"
                     fill="rgba(239,68,68,0.5)" align="center"
                   />
                 </>
