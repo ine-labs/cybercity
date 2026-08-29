@@ -1,26 +1,33 @@
+# CyberCity ICS/OT — lab deployment
+#
+# Host networking (Linux/Kali) so every port sits natively on the host:
+#   3000  frontend (HMI)          8000  backend API/WebSocket
+#   5020  Modbus     5021/udp SNMP     5022  IEC 61850     5023  DNP3
+# This makes the Kali attacker tools (nmap/mbpoll/snmpwalk/Wireshark) behave
+# exactly as against a real device, and the HydraGuard eavesdropping phase work.
+#
+# Self-contained images (code baked in, no bind mounts, no runtime npm/pip):
+#   Build & run:   docker compose up -d --build
+#   Relaunch:      docker compose down && docker compose up -d      (clean state)
+#   Stop:          docker compose down
+# See DEPLOY.md for the offline (air-gapped) save/load workflow.
+#
+# NOTE: network_mode "host" is a Linux feature. On macOS/Windows Docker Desktop
+# it does not expose ports to the host the same way — build/run this on Linux.
+
 services:
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"         # FastAPI + Socket.IO (WebSocket)
-      - "5020:5020"         # Modbus/TCP      — Scenario 1: HydraGuard
-      - "5021:5021/udp"     # SNMP v2c        — Scenario 2: MetroGrid Traffic
-      - "5022:5022"         # IEC 61850 MMS   — Scenario 3: Northgate Substation
-      - "5023:5023"         # DNP3            — Scenario 4: Meridian Compressor Station
+    image: cybercity-backend
+    network_mode: host
     environment:
       - PYTHONUNBUFFERED=1
-    volumes:
-      - ./backend:/app
     restart: unless-stopped
 
   frontend:
-    image: node:20-alpine
-    working_dir: /app
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    build: ./frontend
+    image: cybercity-frontend
+    network_mode: host
     depends_on:
       - backend
+    restart: unless-stopped
