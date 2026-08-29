@@ -56,7 +56,7 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 ---
 
 ### 🌊 Scenario 1: HydraGuard (Dam & Water Treatment)
-**Modbus/TCP · Port 5020** — zero built-in authentication (inspired by the Bowman Avenue Dam breach and the Oldsmar, FL water treatment incident).
+**Modbus/TCP · Port 5020**: zero built-in authentication (inspired by the Bowman Avenue Dam breach and the Oldsmar, FL water treatment incident).
 
 - Enumerate and manipulate registers with `mbpoll`/`modpoll`, sniff cleartext traffic with Wireshark
 - Open sluice gates, spike chemical dosing, kill pumps, disable alarms
@@ -64,7 +64,7 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 ---
 
 ### 🚦 Scenario 2: MetroGrid (4-Way Traffic Intersection)
-**SNMP v2c (NTCIP 1202) · Port 5021/UDP** — plaintext community-string auth; real intersections have been found exposed with default strings.
+**SNMP v2c (NTCIP 1202) · Port 5021/UDP**: plaintext community-string auth; real intersections have been found exposed with default strings.
 
 - Walk the OID tree with `snmpwalk`, rewrite phase timing and signal state
 - Abuse Emergency Vehicle Preemption and disable the Conflict Monitor to force simultaneous greens (TRISIS-style safety bypass)
@@ -72,7 +72,7 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 ---
 
 ### ⚡ Scenario 3: Northgate Substation (230/115kV Power Grid)
-**IEC 61850 MMS · Port 5022** — most legacy IEDs have no authentication (mirrors the Industroyer/Crashoverride attack, Ukraine 2016).
+**IEC 61850 MMS · Port 5022**: most legacy IEDs have no authentication (mirrors the Industroyer/Crashoverride attack, Ukraine 2016).
 
 - Read breaker, transformer, and relay state; trip circuit breakers; disable protection relays
 - Cascade a transformer overload into a full 190MW blackout
@@ -80,7 +80,7 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 ---
 
 ### ⛽ Scenario 4: Meridian Compressor Station 7 (Gas Pipeline)
-**DNP3 · Port 5023** — no default authentication (mirrors PIPEDREAM/INCONTROLLER and TRISIS/TRITON).
+**DNP3 · Port 5023**: no default authentication (mirrors PIPEDREAM/INCONTROLLER and TRISIS/TRITON).
 
 - Enumerate the outstation, bypass the electronic ESD *and* isolate the mechanical relief valve to defeat both safety layers
 - Spoof telemetry so the operator's HMI stays "nominal" while the pipeline ruptures underneath (Stuxnet-style deception)
