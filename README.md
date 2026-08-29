@@ -15,7 +15,7 @@
 <p align="center">
   <img alt="Modbus" src="https://img.shields.io/badge/Protocol-Modbus%2FTCP-FF6B35" />
   <img alt="SNMP" src="https://img.shields.io/badge/Protocol-SNMP%20v2c%20%28NTCIP%29-8B5CF6" />
-  <img alt="IEC 61850" src="https://img.shields.io/badge/Protocol-IEC%2061850%20MMS-0EA5E9" />
+  <img alt="IEC 60870-5-104" src="https://img.shields.io/badge/Protocol-IEC%2060870--5--104-0EA5E9" />
   <img alt="DNP3" src="https://img.shields.io/badge/Protocol-DNP3-FB923C" />
 </p>
 
@@ -49,7 +49,7 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 |---|----------|----------|------|--------|
 | 1 | **HydraGuard**: Dam & Water Treatment Plant | **Modbus/TCP** | 5020 | ✅ Active |
 | 2 | **MetroGrid**: 4-Way Traffic Intersection | **SNMP v2c** (NTCIP) | 5021/udp | ✅ Active |
-| 3 | **Northgate Substation**: 230/115kV Power Grid | **IEC 61850 MMS** | 5022 | ✅ Active |
+| 3 | **Copperline Substation**: 230/115kV Power Grid | **IEC 60870-5-104** | 5022 | ✅ Active |
 | 4 | **Meridian Compressor Station 7**: Gas Pipeline | **DNP3** | 5023 | ✅ Active |
 | 5+ | **More scenarios in development** | - | - | 🔜 Coming Soon |
 
@@ -71,8 +71,8 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 
 ---
 
-### ⚡ Scenario 3: Northgate Substation (230/115kV Power Grid)
-**IEC 61850 MMS · Port 5022**: most legacy IEDs have no authentication (mirrors the Industroyer/Crashoverride attack, Ukraine 2016).
+### ⚡ Scenario 3: Copperline Substation (230/115kV Power Grid)
+**IEC 60870-5-104 · Port 5022**: no default authentication (mirrors the Industroyer/Crashoverride attack, Ukraine 2016).
 
 - Read breaker, transformer, and relay state; trip circuit breakers; disable protection relays
 - Cascade a transformer overload into a full 190MW blackout
@@ -153,13 +153,13 @@ Open [http://localhost:3000](http://localhost:3000).
 │  FastAPI + Socket.IO (localhost:8000)                                 │
 │  Physics Engine · Protocol Servers · Real-time State                  │
 ├─────────────────┬─────────────────┬─────────────────────┬─────────────┤
-│ Modbus/TCP      │ SNMP Agent      │ IEC 61850 MMS       │ DNP3        │
+│ Modbus/TCP      │ SNMP Agent      │ IEC 60870-5-104     │ DNP3        │
 │ Port 5020       │ Port 5021/udp   │ Port 5022           │ Port 5023   │
 │ Dam & Treatment │ Traffic Control │ Power Substation    │ Gas Pipeline│
 └─────────────────┴─────────────────┴─────────────────────┴─────────────┘
         ▲                 ▲                  ▲                  ▲
         │                 │                  │                  │
-   mbpoll/modpoll    snmpwalk/snmpset   IEC 61850 client    DNP3 master
+   mbpoll/modpoll    snmpwalk/snmpset   nmap/Metasploit     DNP3 master
    (Student attacks with standard ICS/OT tooling)
 ```
 

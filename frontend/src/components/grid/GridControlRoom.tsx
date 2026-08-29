@@ -109,9 +109,9 @@ export function GridControlRoom({ state, sendCommand }: Props) {
       <div className="flex items-center justify-between mb-3 px-1">
         <div>
           <div className="text-sm font-bold text-gray-300">
-            NORTHGATE SUBSTATION  ·  SCADA CONTROL ROOM
+            COPPERLINE SUBSTATION  ·  SCADA CONTROL ROOM
           </div>
-          <div className="text-xs text-gray-600">IEC 61850 MMS  ·  TCP :5022  ·  No Auth</div>
+          <div className="text-xs text-gray-600">IEC 60870-5-104  ·  TCP :5022  ·  No Auth</div>
         </div>
         <span className={`px-3 py-1 rounded border text-xs font-bold ${statusBadge.cls}`}>
           {statusBadge.text}
@@ -319,7 +319,7 @@ export function GridControlRoom({ state, sendCommand }: Props) {
             </div>
             <div className="space-y-2">
               <div className="text-[10px] text-gray-500">
-                IEC 61850 MMS Server: <span className="text-blue-400">tcp://localhost:5022</span>
+                IEC 60870-5-104 Outstation: <span className="text-blue-400">tcp://localhost:5022</span>
               </div>
               <div className="text-[10px] text-gray-500">
                 Auth: <span className="text-red-400 font-bold">NONE (vulnerable)</span>

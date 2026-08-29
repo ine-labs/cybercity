@@ -73,7 +73,7 @@ const SCENARIOS = [
   {
     id: "powergrid",
     title: "Power Grid Substation",
-    subtitle: "IEC 61850 — Blackout Scenario",
+    subtitle: "IEC 60870-5-104 — Blackout Scenario",
     description:
       "Take control of a 230/115kV regional substation. Trip circuit breakers, overload transformers, disable protection relays, and execute the Industroyer cascade blackout pattern.",
     status: "active" as const,
