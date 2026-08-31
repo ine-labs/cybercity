@@ -51,7 +51,8 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 | 2 | **MetroGrid**: 4-Way Traffic Intersection | **SNMP v2c** (NTCIP) | 5021/udp | ✅ Active |
 | 3 | **Copperline Substation**: 230/115kV Power Grid | **IEC 60870-5-104** | 5022 | ✅ Active |
 | 4 | **Meridian Compressor Station 7**: Gas Pipeline | **DNP3** | 5023 | ✅ Active |
-| 5+ | **More scenarios in development** | - | - | 🔜 Coming Soon |
+| 5 | **Cedar Creek Lift Station 7**: Wastewater Pumping Station | **Serial Gateway (UDP)** | 5025/udp | ✅ Active |
+| 6+ | **More scenarios in development** | - | - | 🔜 Coming Soon |
 
 ---
 
@@ -84,6 +85,14 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 
 - Enumerate the outstation, bypass the electronic ESD *and* isolate the mechanical relief valve to defeat both safety layers
 - Spoof telemetry so the operator's HMI stays "nominal" while the pipeline ruptures underneath (Stuxnet-style deception)
+
+---
+
+### 💧 Scenario 5: Cedar Creek Lift Station 7 (Wastewater Pumping Station)
+**Serial-to-Ethernet Gateway (UDP) · Port 5025**: unauthenticated, unthrottled legacy gateway (mirrors the Maroochy Shire sewage-SCADA attack, 2000).
+
+- Flood the gateway; the goal is pure denial of control
+- Starve the station's comms until the pump loses control and the wet well overflows, while the operator's HMI freezes on stale, pre-attack data
 
 ## 🚀 Quick Start
 
@@ -152,14 +161,14 @@ Open [http://localhost:3000](http://localhost:3000).
 ┌───────────────────────────────────────────────────────────────────────┐
 │  FastAPI + Socket.IO (localhost:8000)                                 │
 │  Physics Engine · Protocol Servers · Real-time State                  │
-├─────────────────┬─────────────────┬─────────────────────┬─────────────┤
-│ Modbus/TCP      │ SNMP Agent      │ IEC 60870-5-104     │ DNP3        │
-│ Port 5020       │ Port 5021/udp   │ Port 5022           │ Port 5023   │
-│ Dam & Treatment │ Traffic Control │ Power Substation    │ Gas Pipeline│
-└─────────────────┴─────────────────┴─────────────────────┴─────────────┘
-        ▲                 ▲                  ▲                  ▲
-        │                 │                  │                  │
-   mbpoll/modpoll    snmpwalk/snmpset   nmap/Metasploit     DNP3 master
+├──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┤
+│ Modbus/TCP       │ SNMP Agent       │ IEC 60870-5-104  │ DNP3             │ Serial Gateway   │
+│ Port 5020        │ Port 5021/udp    │ Port 5022        │ Port 5023        │ Port 5025/udp    │
+│ Dam & Treatment  │ Traffic Control  │ Power Substation │ Gas Pipeline     │ Lift Station     │
+└──────────────────┴──────────────────┴──────────────────┴──────────────────┴──────────────────┘
+        ▲                  ▲                  ▲                  ▲                  ▲
+        │                  │                  │                  │                  │
+   mbpoll/modpoll    snmpwalk/snmpset    nmap/Metasploit     DNP3 master        hping3/nping
    (Student attacks with standard ICS/OT tooling)
 ```
 

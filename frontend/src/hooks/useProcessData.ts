@@ -125,12 +125,31 @@ const DEFAULT_PIPELINE: ProcessState["pipeline"] = {
   events: [],
 };
 
+const DEFAULT_LIFT: ProcessState["lift"] = {
+  wet_well_level: 48,
+  inflow_rate: 45,
+  outflow_rate: 0,
+  pump_running: false,
+  pump_command: false,
+  manual_override: false,
+  force_main_pressure: 0,
+  overflow: false,
+  spill_volume_l: 0,
+  high_level_alarm: false,
+  field_comms_ok: true,
+  comms_lost: false,
+  gateway_pkt_rate: 0,
+  gateway_capacity: 400,
+  events: [],
+};
+
 const DEFAULT_STATE: ProcessState = {
   dam: DEFAULT_DAM,
   plant: DEFAULT_PLANT,
   traffic: DEFAULT_TRAFFIC,
   grid: DEFAULT_GRID,
   pipeline: DEFAULT_PIPELINE,
+  lift: DEFAULT_LIFT,
   tick: 0,
   uptime: 0,
 };
@@ -156,6 +175,7 @@ export function useProcessData() {
         traffic: { ...DEFAULT_TRAFFIC, ...data.displayed?.traffic },
         grid: { ...DEFAULT_GRID, ...data.displayed?.grid },
         pipeline: { ...DEFAULT_PIPELINE, ...data.displayed?.pipeline },
+        lift: { ...DEFAULT_LIFT, ...data.displayed?.lift },
       });
       setActual({
         ...DEFAULT_STATE,
@@ -163,6 +183,7 @@ export function useProcessData() {
         traffic: { ...DEFAULT_TRAFFIC, ...data.actual?.traffic },
         grid: { ...DEFAULT_GRID, ...data.actual?.grid },
         pipeline: { ...DEFAULT_PIPELINE, ...data.actual?.pipeline },
+        lift: { ...DEFAULT_LIFT, ...data.actual?.lift },
       });
     }
 
