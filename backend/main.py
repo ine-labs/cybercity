@@ -17,6 +17,8 @@ from modbus_server.server import ModbusPLCServer
 from snmp_server.agent import SNMPTrafficController
 from iec104_server.server import IEC104OutstationServer
 from dnp3_server.server import DNP3OutstationServer
+from comms_gateway.server import CommsGateway
+from comms_gateway.field_poll import FieldPoller
 from operator_hmi import OperatorHMI
 
 # Logging
@@ -56,6 +58,13 @@ modbus_server = ModbusPLCServer(host="0.0.0.0", port=5020)
 snmp_server   = SNMPTrafficController(host="0.0.0.0", port=5021)
 iec104        = IEC104OutstationServer(host="0.0.0.0", port=5022)
 dnp3_server   = DNP3OutstationServer(host="0.0.0.0", port=5023)
+
+# Legacy serial-to-Ethernet gateway for the wastewater lift station (UDP flood target)
+comms_gateway = CommsGateway(host="0.0.0.0", port=5025)
+
+# Real field polling traffic to the gateway, so there's genuine wire traffic to
+# capture (Scenario 5, Phase 2) and something for a flood to actually starve
+field_poller  = FieldPoller(host="127.0.0.1", port=5025)
 
 # Simulated plant operator HMI — continuously polls the Modbus PLC so the
 # network carries genuine operator↔PLC traffic to eavesdrop on (Scenario 1, Phase 2)
@@ -177,6 +186,13 @@ async def manual_control(sid, data):
         engine.pipeline.reset()
         dnp3_server.reset()
 
+    # ─── Wastewater Lift Station scenario ─────────────────────────────
+    elif command == "lift_toggle_pump":
+        engine.lift.toggle_pump()
+    elif command == "lift_reset":
+        engine.lift.reset()
+        comms_gateway.reset()
+
 
 # ─── REST API Endpoints ──────────────────────────────────────────────
 
@@ -189,6 +205,8 @@ async def get_status():
         "snmp_port":    snmp_server.port,
         "iec104_port":  iec104.port,
         "dnp3_port":    dnp3_server.port,
+        "gateway_port": comms_gateway.port,
+        "gateway":      comms_gateway.status(),
     }
 
 
@@ -199,6 +217,7 @@ async def reset_simulation():
     snmp_server.reset()
     iec104.reset()
     dnp3_server.reset()
+    comms_gateway.reset()
     logger.info("All simulations reset to safe defaults")
     return {"status": "reset", "message": "All systems returned to normal"}
 
@@ -269,6 +288,11 @@ async def pre_tick_sync():
         elif name == "telemetry_spoofed":
             engine.pipeline.telemetry_spoofed = bool(value)
 
+    # ─── Wastewater Lift Station: gateway load -> field comms health ─────
+    engine.lift.field_comms_ok   = not comms_gateway.saturated
+    engine.lift.gateway_pkt_rate = comms_gateway.packet_rate
+    engine.lift.gateway_capacity = comms_gateway.CAPACITY_PPS
+
 
 async def post_tick_sync(displayed_state: dict, actual_state: dict):
     """Called AFTER each tick — pushes simulation values to protocol servers and WebSocket."""
@@ -312,6 +336,12 @@ async def startup():
 
     asyncio.create_task(dnp3_server.start())
     logger.info(f"DNP3 outstation starting on TCP port {dnp3_server.port}")
+
+    asyncio.create_task(comms_gateway.start())
+    logger.info(f"Serial-to-Ethernet gateway starting on UDP port {comms_gateway.port}")
+
+    asyncio.create_task(field_poller.start())
+    logger.info("Field poller starting — live polling traffic on UDP 5025")
 
     asyncio.create_task(operator_hmi.start())
     logger.info("Operator HMI (Modbus master) starting — live polling traffic on 5020")
