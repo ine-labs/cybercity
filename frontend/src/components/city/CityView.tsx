@@ -118,10 +118,10 @@ const SCENARIOS = [
   },
   {
     id: "pipeline",
-    title: "Meridian Compressor Station 7",
-    subtitle: "DNP3 — Pipeline Overpressure & Deception",
+    title: "Redwater Compressor Station",
+    subtitle: "Modbus — Pipeline Overpressure & Deception",
     description:
-      "Breach a gas pipeline compressor station's DNP3 outstation. Bypass the electronic safety system and mechanical relief valve, then use false-data injection to hide a catastrophic overpressure rupture from the operator HMI.",
+      "Breach a gas pipeline compressor station's Modbus RTU. Bypass the electronic safety system and mechanical relief valve, then use false-data injection to hide a catastrophic overpressure rupture from the operator HMI.",
     status: "active" as const,
     gradient: "from-orange-950 via-stone-900 to-red-950",
     border: "border-orange-800",

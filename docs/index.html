@@ -177,7 +177,7 @@
 <p>Now open the dashboard in the browser:</p>
 <div class="cmd"><span class="label">Open the HMI</span>http://localhost:<span class="k">3000</span></div>
 
-<div class="box tip"><span class="t">Ports used</span> The lab uses <code>3000</code> (dashboard), <code>8000</code> (backend), and the ICS device ports <code>5020</code> (Modbus), <code>5021/udp</code> (SNMP), <code>5022</code> (IEC 60870-5-104), <code>5023</code> (DNP3). Only these need to be free.</div>
+<div class="box tip"><span class="t">Ports used</span> The lab uses <code>3000</code> (dashboard), <code>8000</code> (backend), and the ICS device ports <code>5020</code> (Modbus), <code>5021/udp</code> (SNMP), <code>5022</code> (IEC 60870-5-104), <code>5023</code> (Modbus/TCP, pipeline). Only these need to be free.</div>
 
 <h3 id="start-tools">3.2 Install the attacker tools</h3>
 <p>Kali already includes <b>nmap</b>, <b>Wireshark</b>, and <b>Metasploit</b>. Add the two tools used in this guide:</p>
@@ -537,7 +537,7 @@ snmpset -v2c -c private localhost:5021 1.3.6.1.4.1.99999.1.7.1.0 i 0</div>
 <p>Further facilities carry the same hands-on approach into other sectors and protocols, for example:</p>
 <ul>
   <li><b>A high-voltage power substation</b> (IEC 60870-5-104), where protection relays and circuit breakers can be manipulated into a cascading blackout.</li>
-  <li><b>A gas-pipeline compressor station</b> (DNP3), where layered safety systems and operator telemetry can be defeated to drive an overpressure event.</li>
+  <li><b>A gas-pipeline compressor station</b> (Modbus/TCP), where layered safety systems and operator telemetry can be defeated to drive an overpressure event.</li>
   <li><b>A remote wastewater lift station</b> (a legacy serial-to-Ethernet gateway), where flooding an unauthenticated network link starves the pump's control loop until the station overflows.</li>
   <li>More sectors and protocols are in active development.</li>
 </ul>

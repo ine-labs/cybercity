@@ -1,7 +1,7 @@
 """
 CyberCity ICS — Main Application
 FastAPI server with Socket.IO for real-time communication.
-Orchestrates all scenario simulations, Modbus server, SNMP agent, and IEC 104 outstation.
+Orchestrates all scenario simulations, Modbus servers, SNMP agent, and IEC 104 outstation.
 """
 
 import asyncio
@@ -16,7 +16,7 @@ from simulation.process_engine import ProcessEngine
 from modbus_server.server import ModbusPLCServer
 from snmp_server.agent import SNMPTrafficController
 from iec104_server.server import IEC104OutstationServer
-from dnp3_server.server import DNP3OutstationServer
+from pipeline_server.server import PipelineModbusServer
 from comms_gateway.server import CommsGateway
 from comms_gateway.field_poll import FieldPoller
 from operator_hmi import OperatorHMI
@@ -57,7 +57,7 @@ engine        = ProcessEngine()
 modbus_server = ModbusPLCServer(host="0.0.0.0", port=5020)
 snmp_server   = SNMPTrafficController(host="0.0.0.0", port=5021)
 iec104        = IEC104OutstationServer(host="0.0.0.0", port=5022)
-dnp3_server   = DNP3OutstationServer(host="0.0.0.0", port=5023)
+pipeline_server = PipelineModbusServer(host="0.0.0.0", port=5023)
 
 # Legacy serial-to-Ethernet gateway for the wastewater lift station (UDP flood target)
 comms_gateway = CommsGateway(host="0.0.0.0", port=5025)
@@ -163,28 +163,28 @@ async def manual_control(sid, data):
     # ─── Pipeline Compressor Station scenario ─────────────────────────
     elif command == "pipeline_set_rpm":
         engine.pipeline.set_rpm_setpoint(float(value))
-        dnp3_server._values[("AO", 0)] = engine.pipeline.rpm_setpoint
+        pipeline_server.set_control("rpm_setpoint", engine.pipeline.rpm_setpoint)
     elif command == "pipeline_toggle_esd_armed":
         engine.pipeline.esd_armed = not engine.pipeline.esd_armed
-        dnp3_server._values[("BO", 0)] = engine.pipeline.esd_armed
+        pipeline_server.set_control("esd_armed", engine.pipeline.esd_armed)
     elif command == "pipeline_toggle_prv_block":
         engine.pipeline.prv_block_valve_closed = not engine.pipeline.prv_block_valve_closed
-        dnp3_server._values[("BO", 1)] = engine.pipeline.prv_block_valve_closed
+        pipeline_server.set_control("prv_block_valve_closed", engine.pipeline.prv_block_valve_closed)
     elif command == "pipeline_toggle_suction_valve":
         engine.pipeline.suction_valve_open = not engine.pipeline.suction_valve_open
-        dnp3_server._values[("BO", 2)] = engine.pipeline.suction_valve_open
+        pipeline_server.set_control("suction_valve_open", engine.pipeline.suction_valve_open)
     elif command == "pipeline_toggle_discharge_valve":
         engine.pipeline.discharge_valve_open = not engine.pipeline.discharge_valve_open
-        dnp3_server._values[("BO", 3)] = engine.pipeline.discharge_valve_open
+        pipeline_server.set_control("discharge_valve_open", engine.pipeline.discharge_valve_open)
     elif command == "pipeline_set_blowdown_valve":
         engine.pipeline.blowdown_valve_open = bool(value)
-        dnp3_server._values[("BO", 4)] = engine.pipeline.blowdown_valve_open
+        pipeline_server.set_control("blowdown_valve_open", engine.pipeline.blowdown_valve_open)
     elif command == "pipeline_toggle_spoof":
         engine.pipeline.telemetry_spoofed = not engine.pipeline.telemetry_spoofed
-        dnp3_server._values[("BO", 5)] = engine.pipeline.telemetry_spoofed
+        pipeline_server.set_control("telemetry_spoofed", engine.pipeline.telemetry_spoofed)
     elif command == "pipeline_reset":
         engine.pipeline.reset()
-        dnp3_server.reset()
+        pipeline_server.reset()
 
     # ─── Wastewater Lift Station scenario ─────────────────────────────
     elif command == "lift_toggle_pump":
@@ -204,7 +204,7 @@ async def get_status():
         "modbus_port":  modbus_server.port,
         "snmp_port":    snmp_server.port,
         "iec104_port":  iec104.port,
-        "dnp3_port":    dnp3_server.port,
+        "pipeline_port": pipeline_server.port,
         "gateway_port": comms_gateway.port,
         "gateway":      comms_gateway.status(),
     }
@@ -216,7 +216,7 @@ async def reset_simulation():
     modbus_server._set_initial_values()
     snmp_server.reset()
     iec104.reset()
-    dnp3_server.reset()
+    pipeline_server.reset()
     comms_gateway.reset()
     logger.info("All simulations reset to safe defaults")
     return {"status": "reset", "message": "All systems returned to normal"}
@@ -270,8 +270,8 @@ async def pre_tick_sync():
         elif name == "RREC1":
             engine.grid.autorecloser_enabled = bool(value)
 
-    # ─── Pipeline Compressor Station (DNP3 Direct Operate writes) ───────
-    pipeline_writes = dnp3_server.read_attacker_writes()
+    # ─── Pipeline Compressor Station (Modbus coil / setpoint writes) ───
+    pipeline_writes = pipeline_server.read_attacker_writes()
     for name, value in pipeline_writes.items():
         if name == "rpm_setpoint":
             engine.pipeline.set_rpm_setpoint(float(value))
@@ -308,8 +308,8 @@ async def post_tick_sync(displayed_state: dict, actual_state: dict):
     # Sync grid → IEC 60870-5-104 outstation
     iec104.update_from_simulation(actual_state["grid"])
 
-    # Sync pipeline → DNP3 outstation
-    dnp3_server.update_from_simulation(actual_state["pipeline"])
+    # Sync pipeline → Modbus RTU
+    pipeline_server.update_from_simulation(actual_state["pipeline"])
 
     # Push to all WebSocket clients
     await sio.emit("process_update", {
@@ -334,8 +334,8 @@ async def startup():
     asyncio.create_task(iec104.start())
     logger.info(f"IEC 60870-5-104 outstation starting on TCP port {iec104.port}")
 
-    asyncio.create_task(dnp3_server.start())
-    logger.info(f"DNP3 outstation starting on TCP port {dnp3_server.port}")
+    asyncio.create_task(pipeline_server.start())
+    logger.info(f"Pipeline Modbus RTU starting on TCP port {pipeline_server.port}")
 
     asyncio.create_task(comms_gateway.start())
     logger.info(f"Serial-to-Ethernet gateway starting on UDP port {comms_gateway.port}")

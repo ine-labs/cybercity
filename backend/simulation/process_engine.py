@@ -98,7 +98,7 @@ class ProcessEngine:
         Get the state as displayed to the operator HMI.
 
         Normally identical to the actual state. But if pipeline telemetry has
-        been spoofed (false-data-injection attack via DNP3), the displayed
+        been spoofed (false-data-injection attack via Modbus), the displayed
         pipeline values are frozen at a fabricated "nominal" snapshot while
         the real process continues to deteriorate underneath — the operator
         has no way to see it. This mirrors Stuxnet-style deception and the

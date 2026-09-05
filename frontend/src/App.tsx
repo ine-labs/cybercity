@@ -125,7 +125,7 @@ function ScenarioShell({ displayed, actual, connected, sendCommand }: ProcessDat
   const liftView     = (LIFT_NAV.some(n => n.id === view) ? view : "station") as LiftView_;
 
   const scenarioLabel = isDam ? "HydraGuard" : isTraffic ? "MetroGrid" :
-    isGrid ? "Copperline Substation" : isPipeline ? "Meridian Compressor Station 7" :
+    isGrid ? "Copperline Substation" : isPipeline ? "Redwater Compressor Station" :
     "Cedar Creek Lift Station 7";
   const scenarioIcon  = isDam ? "HG" : isTraffic ? "MG" : isGrid ? "PS" : isPipeline ? "CS" : "LS";
   const scenarioBg    = isDam ? "bg-blue-600" : isTraffic ? "bg-amber-600" : isGrid ? "bg-yellow-600" :

@@ -1,6 +1,6 @@
 /**
  * CompressorStationView — Animated Process Diagram
- * Meridian Compressor Station 7 — Natural Gas Pipeline
+ * Redwater Compressor Station — Natural Gas Pipeline
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -175,7 +175,7 @@ function Valve({ x, y, open, id, vertical = false, kind = "flow" }: {
       <Line points={[x - S, y - S, x + S, y + S]} stroke={col} strokeWidth={1.3} />
       <Line points={[x + S, y - S, x - S, y + S]} stroke={col} strokeWidth={1.3} />
       <Text x={vertical ? x + S + 4 : x - S - 2} y={vertical ? y - 5 : y + S + 3}
-        text={id} fontSize={8} fontFamily="monospace" fill={col} />
+        text={id} fontSize={10} fontFamily="monospace" fill={col} />
     </Group>
   );
 }
@@ -260,9 +260,9 @@ function Compressor({ x, y, r, rpm, vibration, tripped, ruptured }: {
       <Circle radius={2} fill="#030712" />
 
       <Text x={-r} y={r + 8} width={2 * r} align="center" text="COMPRESSOR"
-        fontSize={9} fontFamily="monospace" fontStyle="bold" fill={col} />
+        fontSize={11} fontFamily="monospace" fontStyle="bold" fill={col} />
       <Text x={-r} y={r + 20} width={2 * r} align="center" text={`${rpm.toFixed(0)} RPM`}
-        fontSize={9} fontFamily="monospace" fill={overspeed ? C.warn : C.textMid} />
+        fontSize={11} fontFamily="monospace" fill={overspeed ? C.warn : C.textMid} />
     </Group>
   );
 }
@@ -316,7 +316,7 @@ function VentStack({ x, topY, bottomY, active, label }: {
         </>
       )}
       <Text x={x - 30} y={topY - 22} width={60} align="center" text={label}
-        fontSize={7.5} fontFamily="monospace" fill={col} />
+        fontSize={9} fontFamily="monospace" fill={col} />
     </Group>
   );
 }
@@ -394,23 +394,23 @@ export function CompressorStationView({ pipeline: p }: Props) {
 
           <Rect x={0} y={0} width={W} height={22} fill="#050c1a" />
           <Text x={0} y={6} width={W} align="center"
-            text="MERIDIAN PIPELINE — COMPRESSOR STATION 7"
-            fontSize={10} fontFamily="monospace" fontStyle="bold" fill="#6e4321" />
+            text="REDWATER COMPRESSOR STATION  ·  NATURAL GAS PIPELINE"
+            fontSize={13} fontFamily="monospace" fontStyle="bold" fill="#6e4321" />
 
           {/* Suction header */}
           <Hoverable onHover={handleHover} onLeave={handleLeave} info={{
             title: "Upstream Pipeline",
             desc: "Incoming gas supply feeding the station at approximately 620 psi nominal suction pressure.",
           }}>
-            <Text x={SUCTION_X - 10} y={PIPE_Y - 30} text="UPSTREAM" fontSize={8} fontFamily="monospace" fill={C.textDim} />
-            <Text x={SUCTION_X - 10} y={PIPE_Y - 18} text="PIPELINE" fontSize={8} fontFamily="monospace" fill={C.textDim} />
+            <Text x={SUCTION_X - 10} y={PIPE_Y - 30} text="UPSTREAM" fontSize={10} fontFamily="monospace" fill={C.textDim} />
+            <Text x={SUCTION_X - 10} y={PIPE_Y - 18} text="PIPELINE" fontSize={10} fontFamily="monospace" fill={C.textDim} />
           </Hoverable>
           <Line points={[SUCTION_X, PIPE_Y, SVALVE_X - 10, PIPE_Y]} stroke={p.suction_valve_open ? C.gas : C.gasDim} strokeWidth={4} />
           <FlowArrows x1={SUCTION_X} x2={SVALVE_X - 10} y={PIPE_Y} active={suctionActive} col={C.gas} />
           <Hoverable onHover={handleHover} onLeave={handleLeave} info={{
             title: "Suction Block Valve",
             desc: "Isolates the compressor from the upstream pipeline supply. Closing it starves the compressor of gas.",
-            tag: "DNP3 G12V2 · Binary Output (attackable)",
+            tag: "Modbus coil 2 · suction valve cmd (attackable)",
           }}>
             <Valve x={SVALVE_X} y={PIPE_Y} open={p.suction_valve_open} id="SUCTION VLV" />
           </Hoverable>
@@ -420,7 +420,7 @@ export function CompressorStationView({ pipeline: p }: Props) {
           <Hoverable onHover={handleHover} onLeave={handleLeave} info={{
             title: "Centrifugal Compressor",
             desc: "Motor-driven compressor raising gas from suction (~620 psi) to discharge (~1,420 psi nominal). Overspeed drives vibration, temperature, and discharge pressure past safe limits.",
-            tag: "DNP3 G40V0 · Analog Output (attackable)",
+            tag: "Modbus HR 0 · RPM setpoint (attackable)",
           }}>
             <Compressor x={COMP_X} y={PIPE_Y} r={COMP_R} rpm={p.compressor_rpm} vibration={p.vibration}
               tripped={p.esd_tripped} ruptured={p.ruptured} />
@@ -432,7 +432,7 @@ export function CompressorStationView({ pipeline: p }: Props) {
           <Hoverable onHover={handleHover} onLeave={handleLeave} info={{
             title: "Discharge Block Valve",
             desc: "Routes compressed gas to the downstream pipeline. Closing it while the compressor runs risks a deadhead pressure spike.",
-            tag: "DNP3 G12V3 · Binary Output (attackable)",
+            tag: "Modbus coil 3 · discharge valve cmd (attackable)",
           }}>
             <Valve x={DVALVE_X} y={PIPE_Y} open={p.discharge_valve_open} id="DISCH VLV" />
           </Hoverable>
@@ -444,7 +444,7 @@ export function CompressorStationView({ pipeline: p }: Props) {
           }}>
             <Rect x={DOWNSTREAM_X} y={PIPE_Y - 20} width={50} height={40}
               fill="rgba(107,114,128,0.08)" stroke="#4b5563" strokeWidth={1} cornerRadius={3} />
-            <Text x={DOWNSTREAM_X - 5} y={PIPE_Y + 24} width={60} align="center" text="DOWNSTREAM" fontSize={7} fontFamily="monospace" fill={C.textDim} />
+            <Text x={DOWNSTREAM_X - 5} y={PIPE_Y + 24} width={60} align="center" text="DOWNSTREAM" fontSize={9} fontFamily="monospace" fill={C.textDim} />
           </Hoverable>
 
           {/* PRV branch */}
@@ -453,7 +453,7 @@ export function CompressorStationView({ pipeline: p }: Props) {
           <Hoverable onHover={handleHover} onLeave={handleLeave} info={{
             title: "PRV Isolation Valve",
             desc: "Isolates the mechanical Pressure Relief Valve (Layer 2 safety). Closing this removes the pipeline's last fail-safe — mirrors the real-world 'blocked-in relief valve' failure mode (e.g. BP Texas City, 2005).",
-            tag: "DNP3 G12V1 · Binary Output (attackable)",
+            tag: "Modbus coil 1 · PRV isolation (attackable)",
           }}>
             <Valve x={PRV_STUB_X} y={PIPE_Y - 75} open={!p.prv_block_valve_closed} id="PRV-BLK" vertical />
           </Hoverable>
@@ -470,7 +470,7 @@ export function CompressorStationView({ pipeline: p }: Props) {
           <Hoverable onHover={handleHover} onLeave={handleLeave} info={{
             title: "Blowdown / Emergency Vent Valve",
             desc: "Vents gas to atmosphere. Opens automatically when the ESD trips, or can be commanded open/closed manually.",
-            tag: "DNP3 G12V4 · Binary Output (attackable)",
+            tag: "Modbus coil 4 · blowdown valve cmd (attackable)",
           }}>
             <Valve x={BLOWDOWN_STUB_X} y={PIPE_Y - 75} open={p.blowdown_valve_open} id="BLOWDOWN" vertical kind="vent" />
           </Hoverable>
@@ -493,14 +493,14 @@ export function CompressorStationView({ pipeline: p }: Props) {
           <Hoverable onHover={handleHover} onLeave={handleLeave} info={{
             title: "Emergency Shutdown System (Layer 1)",
             desc: "Electronic safety interlock. Trips the compressor and opens the blowdown valve on high-high pressure, overspeed, or high vibration — but only while armed.",
-            tag: "DNP3 G12V0 · Binary Output (attackable)",
+            tag: "Modbus coil 0 · ESD armed (attackable)",
           }}>
             <Rect x={40} y={PIPE_Y + 55} width={170} height={34}
               fill={p.esd_armed ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.12)"}
               stroke={p.esd_armed ? C.energized : C.closed} strokeWidth={1} cornerRadius={4} />
-            <Text x={48} y={PIPE_Y + 60} text="ESD / SIS (Layer 1)" fontSize={8} fontFamily="monospace" fill={C.textDim} />
+            <Text x={48} y={PIPE_Y + 60} text="ESD / SIS (Layer 1)" fontSize={10} fontFamily="monospace" fill={C.textDim} />
             <Text x={48} y={PIPE_Y + 72} text={p.esd_armed ? "ARMED" : "BYPASSED — UNSAFE"}
-              fontSize={10} fontFamily="monospace" fontStyle="bold"
+              fontSize={12} fontFamily="monospace" fontStyle="bold"
               fill={p.esd_armed ? C.energized : C.closed} />
           </Hoverable>
 
@@ -514,7 +514,7 @@ export function CompressorStationView({ pipeline: p }: Props) {
                   <Text x={0} y={195} width={W} align="center" text="UNCONTROLLED GAS RELEASE"
                     fontSize={14} fontFamily="monospace" fill="rgba(251,146,60,0.75)" />
                   <Text x={0} y={218} width={W} align="center" text={p.failure_mode ?? ""}
-                    fontSize={11} fontFamily="monospace" fill="rgba(239,68,68,0.55)" />
+                    fontSize={13} fontFamily="monospace" fill="rgba(239,68,68,0.55)" />
                 </>
               )}
             </Group>
@@ -527,7 +527,7 @@ export function CompressorStationView({ pipeline: p }: Props) {
       <div className="bg-gray-900 border-l border-gray-800 p-3 flex flex-col gap-2.5 text-xs font-mono overflow-y-auto flex-shrink-0"
         style={{ width: PANEL_W, minHeight: stageH }}>
         <div className="text-center border-b border-gray-700 pb-2">
-          <div className="text-gray-500 text-[9px] uppercase tracking-widest">Meridian CS7 · Unit 1</div>
+          <div className="text-gray-500 text-[9px] uppercase tracking-widest">Redwater CS · Unit 1</div>
           <div className={`text-base font-bold mt-1 ${
             p.ruptured ? "text-red-500 animate-pulse" :
             p.pipe_stress > 50 || p.high_pressure_alarm ? "text-amber-400" : "text-green-400"
