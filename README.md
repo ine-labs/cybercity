@@ -160,9 +160,9 @@ Open [http://localhost:3000](http://localhost:3000).
 └────────────────────────┬────────────────────────────────┘
                          │ WebSocket (Socket.IO)
                          ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│  FastAPI + Socket.IO (localhost:8000)                                 │
-│  Physics Engine · Protocol Servers · Real-time State                  │
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│  FastAPI + Socket.IO (localhost:8000)                                                        │
+│  Physics Engine · Protocol Servers · Real-time State                                         │
 ├──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┤
 │ Modbus/TCP       │ SNMP Agent       │ IEC 60870-5-104  │ Modbus/TCP       │ Serial Gateway   │
 │ Port 5020        │ Port 5021/udp    │ Port 5022        │ Port 5023        │ Port 5025/udp    │
