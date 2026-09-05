@@ -45,6 +45,10 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 - G Khartheesvar, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/g-khartheesvar/)
 - Litesh Ghute, Sr. Engineer (R&D), [LinkedIn](https://www.linkedin.com/in/liteshghute/)
 
+## 🏛️ Architecture
+
+![CyberCity ICS/OT Architecture](assets/architecture.png)
+
 ## 🎯 Scenarios
 
 | # | Facility | Protocol | Port | Status |
@@ -149,29 +153,6 @@ docker compose up --build
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
-
-## 🏛️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Browser (localhost:3000)                               │
-│  React + Konva.js + Recharts                            │
-└────────────────────────┬────────────────────────────────┘
-                         │ WebSocket (Socket.IO)
-                         ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│  FastAPI + Socket.IO (localhost:8000)                                 │
-│  Physics Engine · Protocol Servers · Real-time State                  │
-├──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┤
-│ Modbus/TCP       │ SNMP Agent       │ IEC 60870-5-104  │ Modbus/TCP       │ Serial Gateway   │
-│ Port 5020        │ Port 5021/udp    │ Port 5022        │ Port 5023        │ Port 5025/udp    │
-│ Dam & Treatment  │ Traffic Control  │ Power Substation │ Gas Pipeline     │ Lift Station     │
-└──────────────────┴──────────────────┴──────────────────┴──────────────────┴──────────────────┘
-        ▲                  ▲                  ▲                  ▲                  ▲
-        │                  │                  │                  │                  │
-   mbpoll/modpoll    snmpwalk/snmpset    nmap/Metasploit     mbpoll/Metasploit  hping3/nping
-   (Student attacks with standard ICS/OT tooling)
-```
 
 ---
 
