@@ -1,5 +1,5 @@
 /**
- * PipelineControlRoom — HMI Dashboard for Meridian Compressor Station 7
+ * PipelineControlRoom — HMI Dashboard for Redwater Compressor Station
  * Shows real-time telemetry, trend charts, and manual control panel
  */
 
@@ -88,9 +88,9 @@ export function PipelineControlRoom({ state, sendCommand }: Props) {
       <div className="flex items-center justify-between mb-3 px-1">
         <div>
           <div className="text-sm font-bold text-gray-300">
-            MERIDIAN COMPRESSOR STATION 7 · SCADA CONTROL ROOM
+            REDWATER COMPRESSOR STATION · SCADA CONTROL ROOM
           </div>
-          <div className="text-xs text-gray-600">DNP3 Outstation · TCP :5023 · No Secure Authentication</div>
+          <div className="text-xs text-gray-600">Modbus/TCP RTU · TCP :5023 · No Authentication</div>
         </div>
         <span className={`px-3 py-1 rounded border text-xs font-bold ${statusBadge.cls}`}>
           {statusBadge.text}
@@ -295,7 +295,7 @@ export function PipelineControlRoom({ state, sendCommand }: Props) {
             </div>
             <div className="space-y-2">
               <div className="text-[10px] text-gray-500">
-                DNP3 Outstation: <span className="text-orange-400">tcp://localhost:5023</span>
+                Modbus RTU: <span className="text-orange-400">tcp://localhost:5023</span>
               </div>
               <div className="text-[10px] text-gray-500">
                 Auth: <span className="text-red-400 font-bold">NONE (vulnerable)</span>

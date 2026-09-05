@@ -112,7 +112,7 @@ function ScenarioShell({ displayed, actual, connected, sendCommand }: ProcessDat
   const pipelineView = (PIPELINE_NAV.some(n => n.id === view) ? view : "station") as PipelineView_;
 
   const scenarioLabel = isDam ? "HydraGuard" : isTraffic ? "MetroGrid" :
-    isGrid ? "Copperline Substation" : "Meridian Compressor Station 7";
+    isGrid ? "Copperline Substation" : "Redwater Compressor Station";
   const scenarioIcon  = isDam ? "HG" : isTraffic ? "MG" : isGrid ? "PS" : "CS";
   const scenarioBg    = isDam ? "bg-blue-600" : isTraffic ? "bg-amber-600" : isGrid ? "bg-yellow-600" : "bg-orange-600";
 

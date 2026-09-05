@@ -1,5 +1,5 @@
 """
-Gas Pipeline Compressor Station Simulation — Meridian Compressor Station 7
+Gas Pipeline Compressor Station Simulation — Redwater Compressor Station
 
 Topology:
   Upstream Pipeline ──[Suction Valve]── SUCTION HEADER (620 psi nominal)
@@ -34,7 +34,7 @@ Attack vectors (mirrors PIPEDREAM/INCONTROLLER 2022 + TRISIS/TRITON 2017):
   rpm_setpoint:             Overspeed the compressor — vibration, bearing damage
   esd_armed:                Disable the SIS — no automatic protective trip
   prv_block_valve_closed:   Isolate the mechanical relief valve — last fail-safe gone
-  telemetry_spoofed:        False-data-injection — freezes what the HMI/DNP3
+  telemetry_spoofed:        False-data-injection — freezes what the HMI/Modbus
                              master reads at "nominal" while the real process
                              deteriorates underneath (mirrors Stuxnet-style deception)
 """
@@ -110,7 +110,7 @@ class PipelineCompressorSimulation:
         self.telemetry_spoofed = False
 
         self.events: list = []
-        self._event("Compressor Station 7 initialized — all systems nominal")
+        self._event("Redwater Compressor Station initialized — all systems nominal")
 
     # ── Event logging ────────────────────────────────────────────────────
     def _event(self, msg: str):

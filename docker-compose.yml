@@ -2,7 +2,7 @@
 #
 # Host networking (Linux/Kali) so every port sits natively on the host:
 #   3000  frontend (HMI)          8000  backend API/WebSocket
-#   5020  Modbus     5021/udp SNMP     5022  IEC 60870-5-104   5023  DNP3
+#   5020  Modbus     5021/udp SNMP     5022  IEC 60870-5-104   5023  Modbus (Pipeline)
 # This makes the Kali attacker tools (nmap/mbpoll/snmpwalk/Wireshark) behave
 # exactly as against a real device, and the HydraGuard eavesdropping phase work.
 #

