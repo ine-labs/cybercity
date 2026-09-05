@@ -27,6 +27,8 @@
 
 <p align="center"><strong>Industrial Control Systems / Operational Technology (ICS/OT) Cybersecurity Training Platform.</strong></p>
 
+<p align="center">📖 <strong><a href="https://ine-labs.github.io/cybercity/" target="_blank" rel="noopener noreferrer">Documentation</a></strong></p>
+
 ---
 
 A scenario-based training lab where students learn to assess and exploit real-world industrial control systems. Each scenario simulates a different critical infrastructure facility with live physics, real ICS/OT protocols, and visual feedback.
