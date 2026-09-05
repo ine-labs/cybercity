@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # 8000 = FastAPI/WebSocket, 5020 = Modbus, 5021/udp = SNMP,
-# 5022 = IEC 60870-5-104, 5023 = DNP3, 5025/udp = Serial gateway (Lift Station)
+# 5022 = IEC 60870-5-104, 5023 = Modbus (Pipeline), 5025/udp = Serial gateway (Lift Station)
 EXPOSE 8000 5020 5021/udp 5022 5023 5025/udp
 
 CMD ["python", "main.py"]

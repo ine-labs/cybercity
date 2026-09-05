@@ -23,15 +23,6 @@ if ! command -v python3 &> /dev/null; then
 fi
 echo "  Python: $(python3 --version)"
 
-# Check for SNMP tools (needed for Scenario 2)
-if command -v snmpwalk &> /dev/null; then
-    echo "  SNMP tools: installed"
-else
-    echo "  SNMP tools: NOT FOUND (needed for Scenario 2)"
-    echo "    Install with: brew install net-snmp"
-    echo "    Continuing setup anyway..."
-fi
-
 echo ""
 
 # Install frontend dependencies
