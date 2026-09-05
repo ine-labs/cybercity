@@ -152,7 +152,7 @@ const SCENARIOS = [
     title: "Cedar Creek Lift Station 7",
     subtitle: "Serial Gateway — Denial of Control",
     description:
-      "Take down a remote wastewater lift station by flooding its legacy serial-to-Ethernet gateway. No values are written — the flood starves the controller, the pump loses control, and the wet well overflows while the operator's HMI freezes on stale data.",
+      "Take down a remote wastewater lift station by flooding its legacy serial-to-Ethernet gateway. The flood starves the controller, the pump loses control, and the wet well overflows while the operator's HMI freezes on stale data.",
     status: "active" as const,
     gradient: "from-teal-950 via-slate-900 to-emerald-950",
     border: "border-teal-800",

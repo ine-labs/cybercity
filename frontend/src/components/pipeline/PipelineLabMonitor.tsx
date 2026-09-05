@@ -31,7 +31,7 @@ const MISSIONS: Mission[] = [
     title: "Modbus RTU Reconnaissance",
     difficulty: "BEGINNER",
     objective: "Discover the Modbus RTU and read every coil and register to map the compressor process",
-    background: `Modbus has no authentication or encryption whatsoever — any client that can
+    background: `Modbus has no authentication or encryption whatsoever, any client that can
 open the TCP port can read and write any point. Before PIPEDREAM/INCONTROLLER
 (CISA advisory AA22-103A, 2022) could sabotage gas and electric infrastructure, its
 operators first enumerated the field device's memory map. Reading all four Modbus
@@ -47,7 +47,7 @@ like mbpoll dumps the entire process state in seconds.`,
     difficulty: "INTERMEDIATE",
     objective: "Write the compressor RPM setpoint (holding register) past safe limits and watch the safety system respond",
     background: `A naive attacker jumps straight to sabotage. Push the compressor setpoint hard
-and the plant's own protection will likely catch it — the ESD trips the compressor
+and the plant's own protection will likely catch it, the ESD trips the compressor
 and opens the blowdown valve before real damage occurs. This is the lesson: a
 single register write against an unguarded point is not enough. Defense in
 depth exists precisely to absorb exactly this kind of attack.`,
@@ -57,14 +57,14 @@ depth exists precisely to absorb exactly this kind of attack.`,
   {
     id: "trisis",
     phase: 3,
-    title: "Safety System Bypass — TRISIS Pattern",
+    title: "Safety System Bypass, TRISIS Pattern",
     difficulty: "ADVANCED",
     objective: "Disable BOTH the electronic ESD and the mechanical PRV isolation before re-attempting the overspeed",
     background: `The TRISIS/TRITON malware (2017, Saudi Arabia) targeted Schneider Electric
-Triconex Safety Instrumented Systems directly — not the process, the thing that
+Triconex Safety Instrumented Systems directly, not the process, the thing that
 protects the process. This station has two independent layers: the electronic
 ESD (Layer 1) and a mechanical Pressure Relief Valve (Layer 2) that can vent to
-atmosphere with no electronics involved at all — UNLESS its isolation valve is
+atmosphere with no electronics involved at all, UNLESS its isolation valve is
 closed. Real-world precedent for defeating a mechanical relief valve: the 2005
 BP Texas City disaster, caused in part by a blocked-in relief valve.
 
@@ -75,18 +75,18 @@ BP Texas City disaster, caused in part by a blocked-in relief valve.
   {
     id: "pipedream",
     phase: 4,
-    title: "PIPEDREAM Pattern — Telemetry Spoofing to Rupture",
+    title: "PIPEDREAM Pattern, Telemetry Spoofing to Rupture",
     difficulty: "EXPERT",
-    objective: "Activate telemetry spoofing so the operator HMI freezes at 'nominal' — then finish the job undetected",
+    objective: "Activate telemetry spoofing so the operator HMI freezes at 'nominal', then finish the job undetected",
     background: `PIPEDREAM/INCONTROLLER (CISA/NSA/FBI/DOE advisory AA22-103A, 2022) is described
-as the most versatile ICS attack toolkit ever publicly documented — purpose-built
+as the most versatile ICS attack toolkit ever publicly documented, purpose-built
 to manipulate PLCs and safety controllers in energy infrastructure while evading
 detection. The same principle drove Stuxnet (2010): it fed Iranian operators
 fabricated "normal" centrifuge telemetry while the real machines spun themselves
 to failure. This RTU has an undocumented diagnostic coil (coil 5) that
 freezes every value the Modbus master and operator HMI receive. Activate it, and
-the Control Room screen will show nominal pressure, RPM, and vibration —
-indefinitely — no matter what actually happens to the pipe.`,
+the Control Room screen will show nominal pressure, RPM, and vibration,
+indefinitely, no matter what actually happens to the pipe.`,
     successCondition: "actual.pipeline.ruptured = true while displayed.pipeline still reads nominal",
     impact: [
       "Ground truth (Lab Monitor / actual state): catastrophic pipeline rupture",

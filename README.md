@@ -100,9 +100,8 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 
 #### 📋 Prerequisites
 
-- **Node.js** 20+ (`brew install node`)
-- **Python** 3.11+ (`brew install python@3.11`)
-- **SNMP tools** for Scenario 2 (`brew install net-snmp`)
+- **Node.js** 20+
+- **Python** 3.11+
 
 #### ⚙️ Setup & Run
 

@@ -47,7 +47,7 @@ every grid attack.`,
     background: `Industroyer's IEC 60870-5-104 component polled substation measurements continuously
 before the attack to understand the grid topology and identify the right sequence
 for CB tripping. Knowing which transformers are loaded and which CBs to trip first
-is critical for a coordinated attack — tripping a lightly loaded transformer
+is critical for a coordinated attack, tripping a lightly loaded transformer
 wastes the attack. Target the heavily loaded one.`,
     successCondition: "Read all measurements and confirmed protection relays are currently enabled",
     impact: ["Identify TX1 and TX2 loading %", "Confirm frequency is 60.0 Hz", "Note which protection relays are ENABLED — these are your targets in Phase 4"],
@@ -62,7 +62,7 @@ wastes the attack. Target the heavily loaded one.`,
 in 30 substations within minutes. The 2016 Industroyer attack automated this
 with purpose-built malware. The goal is selective isolation: trip feeders to
 shed load from specific zones, or trip transformer breakers to cascade load
-onto the surviving unit. CB3 (TX1 primary) is the high-value target —
+onto the surviving unit. CB3 (TX1 primary) is the high-value target:
 when TX1 goes, TX2 must carry 190 MW alone on a 200 MVA rating.`,
     successCondition: "TX2 loading exceeds 85% (overload alarm) after CB3 is tripped",
     impact: ["CB5/CB6: Selective load shedding (industrial/residential dark)", "CB3: TX1 offline → TX2 overloads at 95%", "Watch TX2 temperature rising in the Control Room trend chart"],
@@ -70,15 +70,15 @@ when TX1 goes, TX2 must carry 190 MW alone on a 200 MVA rating.`,
   {
     id: "industroyer",
     phase: 4,
-    title: "Industroyer Pattern — Coordinated Blackout",
+    title: "Industroyer Pattern, Coordinated Blackout",
     difficulty: "EXPERT",
     objective: "Disable protection relays and trip ALL circuit breakers to cause a permanent blackout",
     background: `The INDUSTROYER/CRASHOVERRIDE malware (attributed to Sandworm, Russia)
 used in the 2016 Ukraine attack followed this exact sequence:
 
-  1. Disable protective relays — prevents automatic recovery
+  1. Disable protective relays, prevents automatic recovery
   2. Open ALL circuit breakers simultaneously via IEC 60870-5-104
-  3. Disable auto-recloser — blocks automatic reconnection
+  3. Disable auto-recloser, blocks automatic reconnection
   4. Grid loses voltage; frequency collapses
   5. Operators cannot remotely reconnect (firmware wiped by wiper component)
 
