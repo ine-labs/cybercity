@@ -14,21 +14,26 @@ import { GridLabMonitor } from "./components/grid/GridLabMonitor";
 import { CompressorStationView } from "./components/pipeline/CompressorStationView";
 import { PipelineControlRoom } from "./components/pipeline/PipelineControlRoom";
 import { PipelineLabMonitor } from "./components/pipeline/PipelineLabMonitor";
+import { LiftStationView } from "./components/lift/LiftStationView";
+import { LiftControlRoom } from "./components/lift/LiftControlRoom";
+import { LiftLabMonitor } from "./components/lift/LiftLabMonitor";
 import { CityView } from "./components/city/CityView";
 
 type DamView_ = "dam" | "treatment" | "controlroom" | "attack";
 type TrafficView = "intersection" | "controlroom" | "lab";
 type GridView = "substation" | "controlroom" | "lab";
 type PipelineView_ = "station" | "controlroom" | "lab";
-type Scenario = "dam" | "traffic" | "powergrid" | "pipeline";
+type LiftView_ = "station" | "controlroom" | "lab";
+type Scenario = "dam" | "traffic" | "powergrid" | "pipeline" | "lift";
 
-const SCENARIOS: Scenario[] = ["dam", "traffic", "powergrid", "pipeline"];
+const SCENARIOS: Scenario[] = ["dam", "traffic", "powergrid", "pipeline", "lift"];
 
 const DEFAULT_VIEW: Record<Scenario, string> = {
   dam: "dam",
   traffic: "intersection",
   powergrid: "substation",
   pipeline: "station",
+  lift: "station",
 };
 
 const DAM_NAV: { id: DamView_; label: string; color: string }[] = [
@@ -52,6 +57,12 @@ const GRID_NAV: { id: GridView; label: string; color: string }[] = [
 
 const PIPELINE_NAV: { id: PipelineView_; label: string; color: string }[] = [
   { id: "station", label: "Station View", color: "text-orange-400" },
+  { id: "controlroom", label: "Control Room", color: "text-green-400" },
+  { id: "lab", label: "Lab Monitor", color: "text-red-400" },
+];
+
+const LIFT_NAV: { id: LiftView_; label: string; color: string }[] = [
+  { id: "station", label: "Station View", color: "text-teal-400" },
   { id: "controlroom", label: "Control Room", color: "text-green-400" },
   { id: "lab", label: "Lab Monitor", color: "text-red-400" },
 ];
@@ -105,16 +116,20 @@ function ScenarioShell({ displayed, actual, connected, sendCommand }: ProcessDat
   const isTraffic  = currentScreen === "traffic";
   const isGrid     = currentScreen === "powergrid";
   const isPipeline = currentScreen === "pipeline";
+  const isLift     = currentScreen === "lift";
 
   const damView      = (DAM_NAV.some(n => n.id === view) ? view : "dam") as DamView_;
   const trafficView  = (TRAFFIC_NAV.some(n => n.id === view) ? view : "intersection") as TrafficView;
   const gridView     = (GRID_NAV.some(n => n.id === view) ? view : "substation") as GridView;
   const pipelineView = (PIPELINE_NAV.some(n => n.id === view) ? view : "station") as PipelineView_;
+  const liftView     = (LIFT_NAV.some(n => n.id === view) ? view : "station") as LiftView_;
 
   const scenarioLabel = isDam ? "HydraGuard" : isTraffic ? "MetroGrid" :
-    isGrid ? "Copperline Substation" : "Redwater Compressor Station";
-  const scenarioIcon  = isDam ? "HG" : isTraffic ? "MG" : isGrid ? "PS" : "CS";
-  const scenarioBg    = isDam ? "bg-blue-600" : isTraffic ? "bg-amber-600" : isGrid ? "bg-yellow-600" : "bg-orange-600";
+    isGrid ? "Copperline Substation" : isPipeline ? "Redwater Compressor Station" :
+    "Cedar Creek Lift Station 7";
+  const scenarioIcon  = isDam ? "HG" : isTraffic ? "MG" : isGrid ? "PS" : isPipeline ? "CS" : "LS";
+  const scenarioBg    = isDam ? "bg-blue-600" : isTraffic ? "bg-amber-600" : isGrid ? "bg-yellow-600" :
+    isPipeline ? "bg-orange-600" : "bg-teal-600";
 
   return (
     <ErrorBoundary name="ScenarioShell">
@@ -194,6 +209,20 @@ function ScenarioShell({ displayed, actual, connected, sendCommand }: ProcessDat
                   onClick={() => navigate(`/pipeline/${item.id}`)}
                   className={`px-3 py-1.5 rounded font-mono text-xs transition-colors ${
                     pipelineView === item.id
+                      ? `bg-gray-800 ${item.color} border border-gray-700`
+                      : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            {isLift &&
+              LIFT_NAV.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(`/lift/${item.id}`)}
+                  className={`px-3 py-1.5 rounded font-mono text-xs transition-colors ${
+                    liftView === item.id
                       ? `bg-gray-800 ${item.color} border border-gray-700`
                       : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
                   }`}
@@ -300,6 +329,27 @@ function ScenarioShell({ displayed, actual, connected, sendCommand }: ProcessDat
             <div style={{ display: pipelineView === "lab" ? "block" : "none" }}>
               <ErrorBoundary name="PipelineLabMonitor">
                 <PipelineLabMonitor displayed={displayed} actual={actual} />
+              </ErrorBoundary>
+            </div>
+          </>
+        )}
+
+        {/* Wastewater Lift Station Scenario Views */}
+        {isLift && (
+          <>
+            <div style={{ display: liftView === "station" ? "block" : "none" }}>
+              <ErrorBoundary name="LiftStationView">
+                <LiftStationView lift={displayed.lift} />
+              </ErrorBoundary>
+            </div>
+            <div style={{ display: liftView === "controlroom" ? "block" : "none" }}>
+              <ErrorBoundary name="LiftControlRoom">
+                <LiftControlRoom state={displayed} sendCommand={sendCommand} />
+              </ErrorBoundary>
+            </div>
+            <div style={{ display: liftView === "lab" ? "block" : "none" }}>
+              <ErrorBoundary name="LiftLabMonitor">
+                <LiftLabMonitor displayed={displayed} actual={actual} />
               </ErrorBoundary>
             </div>
           </>

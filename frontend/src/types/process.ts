@@ -139,6 +139,27 @@ export interface PipelineState {
   events: string[];
 }
 
+/** Wastewater Lift Station state (protocol-flooding / DoS scenario) */
+export interface LiftStationState {
+  wet_well_level: number;
+  inflow_rate: number;
+  outflow_rate: number;
+  pump_running: boolean;
+  pump_command: boolean;
+  manual_override: boolean;
+  force_main_pressure: number;
+  overflow: boolean;
+  spill_volume_l: number;
+  high_level_alarm: boolean;
+
+  field_comms_ok: boolean;
+  comms_lost: boolean;
+  gateway_pkt_rate: number;
+  gateway_capacity: number;
+
+  events: string[];
+}
+
 /** Full process state from backend */
 export interface ProcessState {
   dam: DamState;
@@ -146,6 +167,7 @@ export interface ProcessState {
   traffic: TrafficState;
   grid: GridState;
   pipeline: PipelineState;
+  lift: LiftStationState;
   tick: number;
   uptime: number;
   spoofing_active?: boolean;

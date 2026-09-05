@@ -147,6 +147,40 @@ const SCENARIOS = [
       </svg>
     ),
   },
+  {
+    id: "lift",
+    title: "Cedar Creek Lift Station 7",
+    subtitle: "Serial Gateway — Denial of Control",
+    description:
+      "Take down a remote wastewater lift station by flooding its legacy serial-to-Ethernet gateway. No values are written — the flood starves the controller, the pump loses control, and the wet well overflows while the operator's HMI freezes on stale data.",
+    status: "active" as const,
+    gradient: "from-teal-950 via-slate-900 to-emerald-950",
+    border: "border-teal-800",
+    icon: (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        {/* Wet well */}
+        <rect x="18" y="20" width="34" height="34" rx="2" fill="#0f766e" opacity="0.35" stroke="#2dd4bf" strokeWidth="1" />
+        <rect x="18" y="34" width="34" height="20" rx="2" fill="#14b8a6" opacity="0.5" />
+        {/* Inflow pipe */}
+        <rect x="0" y="24" width="18" height="5" fill="#475569" />
+        <path d="M 4 26.5 L 10 26.5" stroke="#2dd4bf" strokeWidth="1" opacity="0.8" />
+        {/* Pump + force main rising */}
+        <circle cx="35" cy="46" r="4" fill="#134e4a" stroke="#5eead4" strokeWidth="1" />
+        <rect x="52" y="14" width="5" height="34" fill="#475569" />
+        <rect x="35" y="14" width="22" height="5" fill="#475569" />
+        {/* Overflow warning spill */}
+        <path d="M 18 20 Q 14 16 12 20 Q 10 24 14 24" fill="none" stroke="#f59e0b" strokeWidth="1.2" opacity="0.7" />
+        {/* Gateway / antenna (the weak point) */}
+        <rect x="70" y="30" width="12" height="9" rx="1" fill="#1f2937" stroke="#5eead4" strokeWidth="0.8" />
+        <line x1="76" y1="30" x2="76" y2="22" stroke="#5eead4" strokeWidth="1" />
+        <circle cx="76" cy="21" r="1.5" fill="#f87171" />
+        {/* flood packets hitting the gateway */}
+        <circle cx="88" cy="34" r="1" fill="#ef4444" />
+        <circle cx="92" cy="31" r="1" fill="#ef4444" opacity="0.7" />
+        <circle cx="90" cy="37" r="1" fill="#ef4444" opacity="0.5" />
+      </svg>
+    ),
+  },
 ];
 
 export function CityView({ onSelectScenario }: CityViewProps) {

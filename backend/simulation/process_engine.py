@@ -12,6 +12,7 @@ from simulation.treatment_plant import TreatmentPlantSimulation
 from simulation.traffic_intersection import TrafficIntersectionSimulation
 from simulation.power_grid import PowerGridSimulation
 from simulation.pipeline_compressor import PipelineCompressorSimulation
+from simulation.lift_station import LiftStationSimulation
 
 
 class ProcessEngine:
@@ -23,6 +24,7 @@ class ProcessEngine:
         self.traffic = TrafficIntersectionSimulation()
         self.grid = PowerGridSimulation()
         self.pipeline = PipelineCompressorSimulation()
+        self.lift = LiftStationSimulation()
         self.running = False
         self.tick_count = 0
         self.start_time = None
@@ -32,6 +34,11 @@ class ProcessEngine:
         self._pipeline_freeze = None
         self._pipeline_was_spoofed = False
 
+        # Last-good lift-station snapshot the operator HMI keeps showing when
+        # the comms gateway is flooded and field polls stop coming back (stale
+        # data / loss of view -- not spoofed, just cut off)
+        self._lift_last_good = None
+
     def reset(self):
         """Reset entire simulation to safe defaults."""
         self.dam.reset()
@@ -39,8 +46,10 @@ class ProcessEngine:
         self.traffic.reset()
         self.grid.reset()
         self.pipeline.reset()
+        self.lift.reset()
         self._pipeline_freeze = None
         self._pipeline_was_spoofed = False
+        self._lift_last_good = None
         self.tick_count = 0
         self.start_time = time.time()
 
@@ -66,6 +75,9 @@ class ProcessEngine:
         # Pipeline compressor station simulation step
         self.pipeline.tick(dt)
 
+        # Wastewater lift station simulation step
+        self.lift.tick(dt)
+
         self.tick_count += 1
 
     def get_actual_state(self) -> dict:
@@ -76,6 +88,7 @@ class ProcessEngine:
             "traffic": self.traffic.get_state(),
             "grid": self.grid.get_state(),
             "pipeline": self.pipeline.get_state(),
+            "lift": self.lift.get_state(),
             "tick": self.tick_count,
             "uptime": round(time.time() - self.start_time, 1) if self.start_time else 0,
         }
@@ -128,6 +141,23 @@ class ProcessEngine:
         else:
             self._pipeline_was_spoofed = False
             self._pipeline_freeze = None
+
+        # Lift station: when the comms gateway is flooded, field polls stop
+        # coming back, so the operator HMI just keeps showing its last good
+        # reading (stale) with a COMMS LOST flag -- loss of view, no spoofing.
+        lift_actual = state["lift"]
+        if lift_actual["field_comms_ok"]:
+            self._lift_last_good = dict(lift_actual)
+        else:
+            if self._lift_last_good is None:
+                self._lift_last_good = dict(lift_actual)
+            stale = dict(self._lift_last_good)
+            stale["comms_lost"] = True
+            stale["field_comms_ok"] = False
+            # network-level metrics stay live (the HMI can still see the storm)
+            stale["gateway_pkt_rate"] = lift_actual["gateway_pkt_rate"]
+            stale["gateway_capacity"] = lift_actual["gateway_capacity"]
+            state["lift"] = stale
 
         return state
 
