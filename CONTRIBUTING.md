@@ -4,8 +4,8 @@ Thanks for contributing to CyberCity ICS/OT! To keep `main` stable, we follow a 
 
 ## Branching Workflow
 
-- `main` — always stable/deployable. Direct commits are not allowed.
-- `dev` — active development branch. All work is committed here first.
+- `main`: always stable/deployable. Direct commits are not allowed.
+- `dev`: active development branch. All work is committed here first.
 
 **Flow:**
 
