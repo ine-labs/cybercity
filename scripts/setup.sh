@@ -12,7 +12,7 @@ echo "============================================"
 echo ""
 
 # Check prerequisites
-echo "[1/6] Checking prerequisites..."
+echo "[1/5] Checking prerequisites..."
 
 if ! command -v node &> /dev/null; then
     echo "  Node.js not found."
@@ -29,14 +29,14 @@ echo "  Python: $(python3 --version)"
 echo ""
 
 # Install frontend dependencies
-echo "[2/6] Installing frontend dependencies..."
+echo "[2/5] Installing frontend dependencies..."
 cd "$ROOT/frontend"
 npm install
 echo "  Frontend dependencies installed."
 echo ""
 
 # Set up Python virtual environment
-echo "[3/6] Setting up Python backend..."
+echo "[3/5] Setting up Python backend..."
 cd "$ROOT/backend"
 if [ ! -d "venv" ]; then
     if ! python3 -m venv venv; then
@@ -49,7 +49,7 @@ pip install -q -r requirements.txt
 echo "  Backend dependencies installed."
 echo ""
 
-echo "[4/6] Setup complete!"
+echo "[4/5] Setup complete!"
 echo ""
 echo "============================================"
 echo "  To start the lab, run these in separate terminals:"
@@ -66,12 +66,7 @@ echo ""
 echo "  Then open: http://localhost:3000"
 echo "============================================"
 echo ""
-echo "[5/6] Or use Docker Compose (from project root):"
-echo "    docker-compose up --build"
-echo "    Then open: http://localhost:3000"
-echo "============================================"
-echo ""
-echo "[6/6] Services & Ports:"
+echo "[5/5] Services & Ports:"
 echo "    Frontend:   http://localhost:3000"
 echo "    Backend:    http://localhost:8000"
 echo "    Modbus/TCP: localhost:5020  (Scenario 1 — HydraGuard)"
