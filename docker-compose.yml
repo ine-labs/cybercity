@@ -11,7 +11,6 @@
 #   Build & run:   docker compose up -d --build
 #   Relaunch:      docker compose down && docker compose up -d      (clean state)
 #   Stop:          docker compose down
-# See DEPLOY.md for the offline (air-gapped) save/load workflow.
 #
 # NOTE: network_mode "host" is a Linux feature. On macOS/Windows Docker Desktop
 # it does not expose ports to the host the same way — build/run this on Linux.
