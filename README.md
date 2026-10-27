@@ -104,6 +104,8 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 
 ## 🚀 Quick Start
 
+**Platform:** macOS and Linux.
+
 #### 📋 Prerequisites
 
 - **Node.js** 20+
@@ -147,6 +149,8 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🐳 Run with Docker (alternative)
+
+**Platform:** Linux only.
 
 ```bash
 git clone https://github.com/ine-labs/cybercity.git
