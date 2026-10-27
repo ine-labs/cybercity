@@ -1,5 +1,5 @@
 #!/bin/bash
-# CyberCity ICS/OT — Quick Setup Script for macOS
+# CyberCity ICS/OT — Quick Setup Script
 set -e
 
 # Absolute path to the repo root, independent of where the script is invoked from.
@@ -15,13 +15,13 @@ echo ""
 echo "[1/6] Checking prerequisites..."
 
 if ! command -v node &> /dev/null; then
-    echo "  Node.js not found. Install with: brew install node"
+    echo "  Node.js not found."
     exit 1
 fi
 echo "  Node.js: $(node --version)"
 
 if ! command -v python3 &> /dev/null; then
-    echo "  Python3 not found. Install with: brew install python@3.11"
+    echo "  Python3 not found."
     exit 1
 fi
 echo "  Python: $(python3 --version)"
@@ -39,7 +39,10 @@ echo ""
 echo "[3/6] Setting up Python backend..."
 cd "$ROOT/backend"
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
+    if ! python3 -m venv venv; then
+        echo "  Failed to create venv. On Debian/Ubuntu/Kali: sudo apt install -y python3-venv"
+        exit 1
+    fi
 fi
 source venv/bin/activate
 pip install -q -r requirements.txt
