@@ -2,6 +2,9 @@
 # CyberCity ICS/OT — Quick Setup Script for macOS
 set -e
 
+# Absolute path to the repo root, independent of where the script is invoked from.
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
 echo "============================================"
 echo "  CyberCity ICS/OT — Setup"
 echo "  ICS/OT Cybersecurity Training Platform"
@@ -27,14 +30,14 @@ echo ""
 
 # Install frontend dependencies
 echo "[2/6] Installing frontend dependencies..."
-cd "$(dirname "$0")/../frontend"
+cd "$ROOT/frontend"
 npm install
 echo "  Frontend dependencies installed."
 echo ""
 
 # Set up Python virtual environment
 echo "[3/6] Setting up Python backend..."
-cd "$(dirname "$0")/../backend"
+cd "$ROOT/backend"
 if [ ! -d "venv" ]; then
     python3 -m venv venv
 fi
