@@ -35,7 +35,7 @@ A scenario-based training lab where students learn to assess and exploit real-wo
 
 <p align="center">🏆 <strong>Featuring at <a href="https://blackhat.com/europe/arsenal/schedule/?#cybercity---icsot-cybersecurity-training-platform-55026" target="_blank" rel="noopener noreferrer">Black Hat Europe 2026 Arsenal</a></strong></p>
 
-<p align="center">🏆 <strong>Featuring at <a href="https://www.blackhat-india.com/arsenal-schedule#cybercity---icsot-cybersecurity-training-platform-60014" target="_blank" rel="noopener noreferrer">Black Hat India 2026 Arsenal</a></strong></p>
+<p align="center">🏆 <strong>Featured at <a href="https://www.blackhat-india.com/arsenal-schedule#cybercity---icsot-cybersecurity-training-platform-60014" target="_blank" rel="noopener noreferrer">Black Hat India 2026 Arsenal</a></strong></p>
 
 ## 🎬 Demo
 
